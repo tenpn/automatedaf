@@ -174,9 +174,9 @@ html {
 body {
   background: #d4d9dd url("images/bg03.jpg");
   color: #474f51;
-  font-size: 13.5pt;
+  font-size: 17pt;
   font-family: "Yanone Kaffeesatz";
-  line-height: 1.85em;
+  line-height: 1.5em;
   font-weight: 300;
 }
 
@@ -184,7 +184,7 @@ input,
 textarea,
 select {
   color: #474f51;
-  font-size: 13.5pt;
+  font-size: 17pt;
   font-family: "Yanone Kaffeesatz";
   line-height: 1.85em;
   font-weight: 300;
@@ -1557,7 +1557,7 @@ section:last-child,
   background-color: #ffa62b;
   color: #fff;
   text-decoration: none;
-  font-size: 1.75em;
+  font-size: 1.5em;
   height: 2em;
   line-height: 2.125em;
   font-weight: 300;
@@ -1614,7 +1614,7 @@ section:last-child,
   position: absolute;
   left: 0;
   bottom: 35px;
-  font-size: 2.75em;
+  font-size: 2.5em;
 }
 
 #header h1 a {
@@ -1632,7 +1632,7 @@ section:last-child,
 #header nav a {
   color: #c6c8c8;
   text-decoration: none;
-  font-size: 1.4em;
+  font-size: 1.2em;
   margin-left: 60px;
   outline: 0;
 }
@@ -1659,7 +1659,7 @@ section:last-child,
 }
 
 #banner p {
-  font-size: 2em;
+  font-size: 1.5em;
   font-weight: 200;
   line-height: 1.25em;
   padding-right: 1em;
