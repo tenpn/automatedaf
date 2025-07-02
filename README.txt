@@ -21,3 +21,6 @@ Credits:
 	Other:
 		jQuery (jquery.com)
 		Responsive Tools (github.com/ajlkn/responsive-tools)
+
+potential colourscheme: 
+https://coolors.co/ffa62b-136f63-000f08-3e2f5b-c33149
