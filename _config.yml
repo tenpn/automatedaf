@@ -20,7 +20,7 @@
 
 title: Andrew Fray
 email: hi@andrewfray.dev
-tagline: Automated testing and studio devlops in gamedev
+tagline: Automated testing and studio devops in gamedev
 description: >- # this means to ignore newlines until "baseurl:"
   Freelance consultant and engineer helping gamedevs ship faster with pragmatic use of automated testing and studio devops
 baseurl: "" # the subpath of your site, e.g. /blog
