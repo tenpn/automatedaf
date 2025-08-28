@@ -27,6 +27,30 @@
       content="width=device-width, initial-scale=1, user-scalable=no"
     />
     <link rel="stylesheet" href="assets/css/main.css" />
+
+    <!-- MailerLite Universal -->
+    <script>
+      (function (w, d, e, u, f, l, n) {
+        (w[f] =
+          w[f] ||
+          function () {
+            (w[f].q = w[f].q || []).push(arguments);
+          }),
+          (l = d.createElement(e)),
+          (l.async = 1),
+          (l.src = u),
+          (n = d.getElementsByTagName(e)[0]),
+          n.parentNode.insertBefore(l, n);
+      })(
+        window,
+        document,
+        "script",
+        "https://assets.mailerlite.com/js/universal.js",
+        "ml"
+      );
+      ml("account", "1764225");
+    </script>
+    <!-- End MailerLite Universal -->
     {% seo %}
   </head>
   <body>
@@ -42,9 +66,16 @@
               <!-- Nav -->
               <nav id="nav">
                 <a href="index.html">Home</a>
-                <!--a href="index.html">Consulting</a-->
-                <a href="https://andrewfray.wordpress.com">Blog</a>
+
+                <a href="workshops.html"
+                  ><i
+                    class="fa-solid fa-graduation-cap"
+                    style="text-align: left; color: #136f63"
+                  ></i>
+                  Workshops</a
+                >
                 <a href="publicspeaking.html">Public Speaking</a>
+                <a href="https://andrewfray.wordpress.com">Blog</a>
                 <a href="https://autotestingroundtable.com"> ATiG Community </a>
               </nav>
             </div>
