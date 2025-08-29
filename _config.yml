@@ -28,9 +28,9 @@ url: "http://andrewfray.dev" # the base hostname & protocol for your site, e.g. 
 meeting_link: "https://calendar.notion.so/meet/andrewfray/meet"
 twitter:
   username: tenpn
-  card: summary
+  card: summary_large_image
 github_username: tenpn
-lgoo: /images/biglogo.svg
+lgoo: /images/bilgogo.svg
 social:
   name: Andrew Fray
   links:
