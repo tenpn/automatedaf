@@ -5,141 +5,125 @@
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 -->
 <html>
-  <head>
-    <link
-      rel="icon"
-      type="image/png"
-      href="/favicon/favicon-96x96.png"
-      sizes="96x96"
-    />
-    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon/favicon.ico" />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="/favicon/apple-touch-icon.png"
-    />
-    <link rel="manifest" href="/favicon/site.webmanifest" />
-    <title>{{title}}</title>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, user-scalable=no"
-    />
-    <link rel="stylesheet" href="assets/css/main.css" />
 
-    <!-- MailerLite Universal -->
-    <script>
-      (function (w, d, e, u, f, l, n) {
-        (w[f] =
-          w[f] ||
-          function () {
-            (w[f].q = w[f].q || []).push(arguments);
-          }),
-          (l = d.createElement(e)),
-          (l.async = 1),
-          (l.src = u),
-          (n = d.getElementsByTagName(e)[0]),
-          n.parentNode.insertBefore(l, n);
-      })(
-        window,
-        document,
-        "script",
-        "https://assets.mailerlite.com/js/universal.js",
-        "ml"
-      );
-      ml("account", "1764225");
-    </script>
-    <!-- End MailerLite Universal -->
-    {% seo %}
-  </head>
-  <body>
-    <div id="page-wrapper">
-      <!-- Header -->
-      <section id="header">
-        <div class="container">
-          <div class="row">
-            <div class="col-12">
-              <!-- Logo -->
-              <h1><a href="index.html" id="logo">Andrew Fray</a></h1>
+<head>
+  <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+  <link rel="manifest" href="/favicon/site.webmanifest" />
+  <title>{{title}}</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <link rel="stylesheet" href="assets/css/main.css" />
 
-              <!-- Nav -->
-              <nav id="nav">
-                <a href="index.html">Home</a>
+  <!-- MailerLite Universal -->
+  <script>
+    (function (w, d, e, u, f, l, n) {
+      (w[f] =
+        w[f] ||
+        function () {
+          (w[f].q = w[f].q || []).push(arguments);
+        }),
+        (l = d.createElement(e)),
+        (l.async = 1),
+        (l.src = u),
+        (n = d.getElementsByTagName(e)[0]),
+        n.parentNode.insertBefore(l, n);
+    })(
+      window,
+      document,
+      "script",
+      "https://assets.mailerlite.com/js/universal.js",
+      "ml"
+    );
+    ml("account", "1764225");
+  </script>
+  <!-- End MailerLite Universal -->
+  {% seo %}
+</head>
 
-                <a href="workshops.html"
-                  ><i
-                    class="fa-solid fa-graduation-cap"
-                    style="text-align: left; color: #136f63"
-                  ></i>
-                  Workshops</a
-                >
-                <a href="publicspeaking.html">Public Speaking</a>
-                <a href="https://andrewfray.wordpress.com">Blog</a>
-                <a href="https://autotestingroundtable.com"> ATiG Community </a>
-              </nav>
-            </div>
+<body>
+  <div id="page-wrapper">
+    <!-- Header -->
+    <section id="header">
+      <div class="container">
+        <div class="row">
+          <div class="col-12">
+            <!-- Logo -->
+            <h1><a href="index.html" id="logo">Andrew Fray</a></h1>
+
+            <!-- Nav -->
+            <nav id="nav">
+              <a href="index.html">Home</a>
+
+              <a href="workshops.html"><i class="fa-solid fa-graduation-cap"
+                  style="text-align: left; color: #136f63"></i>
+                Workshops</a>
+              <a href="publicspeaking.html">Public Speaking</a>
+              <a target="_blank" href="https://andrewfray.wordpress.com"><i
+                  class="fa-solid fa-arrow-up-right-from-square"></i> Blog</a>
+              <a target="_blank" href="https://atig.dev/"><i class="fa-solid fa-arrow-up-right-from-square"></i> ATiG
+                Community </a>
+            </nav>
           </div>
         </div>
-      </section>
-      {{content}}
+      </div>
+    </section>
+    {{content}}
 
-      <!-- Footer -->
-      <section id="footer">
-        <div class="container">
-          <div class="row">
-            <div class="col-8 col-12-medium">
-              <!-- Links -->
-              <section>
-                <h2>Stay In Touch</h2>
-                <div>
-                  <div class="row">
-                    <div class="col-3 col-12-small">
-                      <i class="fa-brands fa-linkedin"></i>
-                      <a href="http://linkedin.com/in/andrew-fray-9992572/">
-                        LinkedIn
-                      </a>
-                    </div>
-                    <div class="col-3 col-12-small">
-                      <i class="fa-brands fa-bluesky"></i>
-                      <a href="https://bsky.app/profile/andrewfray.dev">
-                        BSky
-                      </a>
-                    </div>
-                    <div class="col-3 col-12-small">
-                      <i class="fa-solid fa-envelope"></i>
-                      <a href="mailto:hi@andrewfray.dev"> Email </a>
-                    </div>
-                    <div class="col-3 col-12-small">
-                      <i class="fa-solid fa-calendar-plus"></i>
-                      <a href="{{site.meeting_link}}"
-                        >Schedule a chat</a
-                      >
-                    </div>
+    <!-- Footer -->
+    <section id="footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-8 col-12-medium">
+            <!-- Links -->
+            <section>
+              <h2>Stay In Touch</h2>
+              <div>
+                <div class="row">
+                  <div class="col-3 col-12-small">
+                    <i class="fa-brands fa-linkedin"></i>
+                    <a href="http://linkedin.com/in/andrew-fray-9992572/">
+                      LinkedIn
+                    </a>
+                  </div>
+                  <div class="col-3 col-12-small">
+                    <i class="fa-brands fa-bluesky"></i>
+                    <a href="https://bsky.app/profile/andrewfray.dev">
+                      BSky
+                    </a>
+                  </div>
+                  <div class="col-3 col-12-small">
+                    <i class="fa-solid fa-envelope"></i>
+                    <a href="mailto:hi@andrewfray.dev"> Email </a>
+                  </div>
+                  <div class="col-3 col-12-small">
+                    <i class="fa-solid fa-calendar-plus"></i>
+                    <a href="{{site.meeting_link}}">Schedule a chat</a>
                   </div>
                 </div>
-              </section>
-            </div>
+              </div>
+            </section>
           </div>
         </div>
-      </section>
-
-      <!-- Copyright -->
-      <div id="copyright">
-        &copy; AutomatedAF. All rights reserved. | Design:
-        <a href="http://html5up.net">HTML5 UP</a>
       </div>
-    </div>
+    </section>
 
-    <!-- Scripts -->
-    <script src="assets/js/jquery.min.js"></script>
-    <script src="assets/js/browser.min.js"></script>
-    <script src="assets/js/breakpoints.min.js"></script>
-    <script src="assets/js/util.js"></script>
-    <script src="assets/js/main.js"></script>
-    <script
-      src="https://kit.fontawesome.com/65d82cdd5e.js"
-      crossorigin="anonymous"
-    ></script>
-  </body>
+    <!-- Copyright -->
+    <div id="copyright">
+      &copy; AutomatedAF. All rights reserved. | Design:
+      <a href="http://html5up.net">HTML5 UP</a>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="assets/js/jquery.min.js"></script>
+  <script src="assets/js/browser.min.js"></script>
+  <script src="assets/js/breakpoints.min.js"></script>
+  <script src="assets/js/util.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="https://kit.fontawesome.com/65d82cdd5e.js" crossorigin="anonymous"></script>
+</body>
+
 </html>
