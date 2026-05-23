@@ -1749,6 +1749,34 @@ section:last-child,
   margin: 0 0 0.15em 0;
 }
 
+#content .cover-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+}
+
+#content .cover-strip li {
+  margin: 0;
+  padding: 0;
+}
+
+#content .cover-strip img {
+  display: block;
+  height: 150px;
+  width: auto;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+#content .cover-strip img:hover {
+  transform: translateY(-4px);
+}
+
 #content .quote-list li {
   border-bottom: solid 1px #e2e6e8;
 }
