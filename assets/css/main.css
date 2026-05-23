@@ -1740,6 +1740,10 @@ section:last-child,
   line-height: 1.4em;
 }
 
+#content .fact-list li:first-child {
+  padding-top: 0;
+}
+
 #content .fact-list li:last-child {
   border-bottom: 0;
   padding-bottom: 0;
