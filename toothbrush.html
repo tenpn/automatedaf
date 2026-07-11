@@ -1,0 +1,511 @@
+---
+permalink: /toothbrush/
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
+    <meta name="theme-color" content="#1e88e5" />
+    <title>Toothbrush Timer</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        height: 100%;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          system-ui, sans-serif;
+        background: #1e88e5;
+        color: #fff;
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        text-align: center;
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        transition: background 0.4s ease;
+      }
+
+      /* Each side gets its own bold background colour */
+      body.side-0 { background: #43a047; } /* Top Right   */
+      body.side-1 { background: #1e88e5; } /* Top Left    */
+      body.side-2 { background: #8e24aa; } /* Bottom Right*/
+      body.side-3 { background: #f4511e; } /* Bottom Left */
+      body.celebrate { background: #ffb300; }
+
+      .app {
+        width: 100%;
+        max-width: 640px;
+        min-height: 100svh;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Top content area: emoji / headline / timer / teeth */
+      .stage {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(14px, 3vh, 32px);
+        /* No bottom padding: the button starts right below the quadrants */
+        padding: clamp(40px, 9vh, 88px) 20px 0;
+      }
+
+      /* Reserve constant space so empty vs "Nice!" / emoji states don't
+         resize the stage and shift the dial below the quadrants. */
+      .headline {
+        font-size: clamp(28px, 8vw, 56px);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+        min-height: clamp(30px, 8.4vw, 59px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .emoji {
+        font-size: clamp(64px, 20vw, 140px);
+        line-height: 1;
+        height: clamp(84px, 24vw, 172px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Circular progress ring with the countdown number inside */
+      .timer-ring {
+        position: relative;
+        width: clamp(220px, 62vw, 340px);
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .timer-ring.hidden {
+        display: none;
+      }
+      .timer-ring svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+      .ring-track {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.25);
+        stroke-width: 14;
+      }
+      .ring-fill {
+        fill: none;
+        stroke: #fff;
+        stroke-width: 14;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 1s linear;
+      }
+
+      /* Big countdown number */
+      .timer {
+        font-size: clamp(70px, 22vw, 170px);
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+        letter-spacing: -0.03em;
+      }
+
+      /* Mouth map: 4 quadrants */
+      .mouth {
+        width: clamp(180px, 60vw, 320px);
+        aspect-ratio: 1 / 0.8;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 8px;
+        margin: 0 auto;
+      }
+      .quad {
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.22);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: clamp(24px, 9vw, 48px);
+        transition: transform 0.2s ease, background 0.2s ease;
+      }
+      /* Rounded outer corners to hint a mouth shape */
+      .quad.tr { border-top-right-radius: 60px; }
+      .quad.tl { border-top-left-radius: 60px; }
+      .quad.br { border-bottom-right-radius: 60px; }
+      .quad.bl { border-bottom-left-radius: 60px; }
+
+      .quad.done {
+        background: rgba(255, 255, 255, 0.9);
+      }
+      .quad.active {
+        background: #fff;
+        color: #1e88e5;
+        transform: scale(1.08);
+        animation: pulse 1s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { transform: scale(1.06); }
+        50% { transform: scale(1.14); }
+      }
+
+      /* Shared circular slot below the quadrants. The timer ring and the
+         button are stacked in the same grid cell, so their circles land in
+         exactly the same place at the same size. */
+      .dial {
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 34svh;
+        display: grid;
+        place-items: center;
+      }
+      .dial > * {
+        grid-area: 1 / 1; /* stack both children in one cell */
+      }
+
+      /* The button is a big invisible hit target filling the whole slot —
+         tappable pixels are large... */
+      .btn {
+        appearance: none;
+        border: none;
+        background: none;
+        cursor: pointer;
+        align-self: stretch;
+        justify-self: stretch;
+        width: 100%;
+        height: 100%;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .btn.hidden {
+        display: none;
+      }
+
+      /* ...but the visible control is a perfect circle, the same size as the
+         timer ring and centered in the same spot, label in the middle. */
+      .btn-face {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: clamp(220px, 62vw, 340px);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: #fff;
+        color: #1e88e5;
+        font-family: inherit;
+        font-weight: 800;
+        font-size: clamp(28px, 8vw, 48px);
+        line-height: 1.05;
+        text-align: center;
+        padding: 16px;
+        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.22);
+        transition: transform 0.1s ease, filter 0.1s ease;
+      }
+      .btn:active .btn-face {
+        transform: scale(0.94);
+        filter: brightness(0.94);
+      }
+
+      /* Celebration */
+      .celebrate-emoji {
+        font-size: clamp(84px, 24vw, 168px);
+        line-height: 1;
+        animation: bounce 0.8s ease infinite;
+      }
+      @keyframes bounce {
+        0%, 100% { transform: translateY(0) rotate(-6deg); }
+        50% { transform: translateY(-24px) rotate(6deg); }
+      }
+
+      .confetti {
+        position: fixed;
+        top: -20px;
+        font-size: 28px;
+        animation: fall linear forwards;
+        pointer-events: none;
+      }
+      @keyframes fall {
+        to {
+          transform: translateY(105vh) rotate(540deg);
+          opacity: 0.2;
+        }
+      }
+    </style>
+  </head>
+  <body class="side-0">
+    <div class="app" id="app">
+      <!-- Top: emoji / headline / teeth quadrants -->
+      <div class="stage">
+        <div class="emoji" id="emoji">🦷</div>
+        <div class="headline" id="headline">Toothbrush Timer</div>
+
+        <div class="mouth" id="mouth" aria-hidden="true">
+          <div class="quad tl" data-quad="1">😁</div>
+          <div class="quad tr" data-quad="0">😁</div>
+          <div class="quad bl" data-quad="3">😁</div>
+          <div class="quad br" data-quad="2">😁</div>
+        </div>
+      </div>
+
+      <!-- Shared circular slot below the quadrants: the timer ring and the
+           button's circle occupy the same place and size (only one shows at
+           a time). The whole area is the button hit target. -->
+      <div class="dial">
+        <div class="timer-ring hidden" id="timerRing">
+          <svg viewBox="0 0 200 200" aria-hidden="true">
+            <circle class="ring-track" cx="100" cy="100" r="90"></circle>
+            <circle class="ring-fill" id="ringFill" cx="100" cy="100" r="90"></circle>
+          </svg>
+          <div class="timer" id="timer">30</div>
+        </div>
+
+        <button class="btn" id="btn">
+          <span class="btn-face" id="btnFace">Start</span>
+        </button>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        // 30s per side normally; ?debug shortens each side to 4s for testing.
+        var SECONDS = /[?&]debug\b/.test(window.location.search) ? 4 : 30;
+        var SIDES = [
+          { name: "Top Right", emoji: "↗️" },
+          { name: "Top Left", emoji: "↖️" },
+          { name: "Bottom Right", emoji: "↘️" },
+          { name: "Bottom Left", emoji: "↙️" },
+        ];
+
+        var body = document.body;
+        var emojiEl = document.getElementById("emoji");
+        var headlineEl = document.getElementById("headline");
+        var timerEl = document.getElementById("timer");
+        var ringEl = document.getElementById("timerRing");
+        var ringFillEl = document.getElementById("ringFill");
+        var mouthEl = document.getElementById("mouth");
+        var quads = Array.prototype.slice.call(
+          mouthEl.querySelectorAll(".quad")
+        );
+        var btn = document.getElementById("btn");
+        var btnFaceEl = document.getElementById("btnFace");
+
+        var current = 0; // which side (0-3)
+        var remaining = SECONDS;
+        var intervalId = null;
+        var brushing = false; // true only while a side's timer is running
+
+        // ---- Circular progress ring ----
+        var RING_C = 2 * Math.PI * 90; // circle r=90 in the SVG
+        ringFillEl.style.strokeDasharray = RING_C;
+        // fraction 0 = empty ring, 1 = full ring
+        function setRing(fraction) {
+          ringFillEl.style.strokeDashoffset = RING_C * (1 - fraction);
+        }
+
+        // ---- Sound: gentle Web Audio beep (no external files) ----
+        var audioCtx = null;
+        function beep() {
+          try {
+            if (!audioCtx) {
+              var AC = window.AudioContext || window.webkitAudioContext;
+              audioCtx = new AC();
+            }
+            var now = audioCtx.currentTime;
+            [0, 0.18].forEach(function (offset) {
+              var osc = audioCtx.createOscillator();
+              var gain = audioCtx.createGain();
+              osc.type = "sine";
+              osc.frequency.value = 660;
+              gain.gain.setValueAtTime(0.0001, now + offset);
+              gain.gain.exponentialRampToValueAtTime(0.25, now + offset + 0.02);
+              gain.gain.exponentialRampToValueAtTime(
+                0.0001,
+                now + offset + 0.16
+              );
+              osc.connect(gain).connect(audioCtx.destination);
+              osc.start(now + offset);
+              osc.stop(now + offset + 0.18);
+            });
+          } catch (e) {
+            /* audio not available — silently ignore */
+          }
+        }
+
+        function setBodySide(i) {
+          body.className = "side-" + i;
+        }
+
+        function paintMouth() {
+          quads.forEach(function (q) {
+            var idx = parseInt(q.getAttribute("data-quad"), 10);
+            q.classList.remove("active", "done");
+            if (idx < current) {
+              // Completed — toothy (clean) smile
+              q.classList.add("done");
+              q.textContent = "😁";
+            } else if (idx === current && brushing) {
+              // Current corner, actively brushing — toothbrush
+              q.classList.add("active");
+              q.textContent = "🪥";
+            } else {
+              // Waiting (incl. the upcoming corner before you tap Next) —
+              // closed-mouth smile
+              q.textContent = "🙂";
+            }
+          });
+        }
+
+        function showIdle() {
+          current = 0;
+          remaining = SECONDS;
+          brushing = false;
+          setBodySide(0);
+          emojiEl.textContent = "🦷";
+          headlineEl.textContent = "Toothbrush Timer";
+          ringEl.classList.add("hidden");
+          mouthEl.style.display = "grid";
+          paintMouth();
+          btnFaceEl.textContent = "Start";
+          btn.classList.remove("hidden");
+        }
+
+        function renderSide() {
+          setBodySide(current);
+          // Keep it clean while brushing: no direction emoji, corner name,
+          // or "Side X of 4" — the mouth map shows which corner is active.
+          emojiEl.textContent = "";
+          headlineEl.textContent = "";
+          paintMouth();
+        }
+
+        function startSide() {
+          brushing = true;
+          renderSide();
+          remaining = SECONDS;
+          timerEl.textContent = remaining;
+          ringEl.classList.remove("hidden");
+          btn.classList.add("hidden");
+
+          // Snap the ring to empty, then let CSS fill it smoothly over the
+          // whole side duration — matches the timer exactly at any length.
+          ringFillEl.style.transition = "none";
+          setRing(0);
+          void ringFillEl.getBoundingClientRect(); // force reflow
+          ringFillEl.style.transition =
+            "stroke-dashoffset " + SECONDS + "s linear";
+          setRing(1);
+
+          intervalId = setInterval(function () {
+            remaining -= 1;
+            if (remaining > 0) {
+              timerEl.textContent = remaining;
+              return;
+            }
+            // Side finished
+            clearInterval(intervalId);
+            intervalId = null;
+            timerEl.textContent = 0;
+            beep();
+            finishSide();
+          }, 1000);
+        }
+
+        function finishSide() {
+          // Mark this side done; no longer brushing until Next is tapped
+          brushing = false;
+          current += 1;
+          paintMouth();
+          ringEl.classList.add("hidden");
+
+          if (current >= SIDES.length) {
+            celebrate();
+            return;
+          }
+
+          // Pause between sides — wait for a tap
+          headlineEl.textContent = "Nice!";
+          emojiEl.textContent = "👍";
+          btnFaceEl.textContent = "Next";
+          btn.classList.remove("hidden");
+        }
+
+        function celebrate() {
+          body.className = "celebrate";
+          // Keep the mouth visible — all four corners now show clean smiles.
+          ringEl.classList.add("hidden");
+          emojiEl.textContent = "🎉";
+          emojiEl.classList.add("celebrate-emoji");
+          headlineEl.textContent = "You did it!";
+          btnFaceEl.textContent = "Do it again";
+          btn.classList.remove("hidden");
+          launchConfetti();
+        }
+
+        function launchConfetti() {
+          var pieces = ["🎉", "⭐", "✨", "🦷", "💙"];
+          for (var i = 0; i < 24; i++) {
+            var c = document.createElement("div");
+            c.className = "confetti";
+            c.textContent = pieces[i % pieces.length];
+            c.style.left = ((i * 37) % 100) + "vw";
+            c.style.animationDuration = 2 + ((i % 5) * 0.4) + "s";
+            c.style.animationDelay = (i % 6) * 0.15 + "s";
+            document.body.appendChild(c);
+            (function (node) {
+              setTimeout(function () {
+                if (node.parentNode) node.parentNode.removeChild(node);
+              }, 5000);
+            })(c);
+          }
+        }
+
+        btn.addEventListener("click", function () {
+          // Ensure audio can play (browsers require a user gesture)
+          if (!audioCtx) {
+            try {
+              var AC = window.AudioContext || window.webkitAudioContext;
+              audioCtx = new AC();
+            } catch (e) {}
+          }
+          if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+
+          var label = btnFaceEl.textContent;
+          if (label === "Do it again") {
+            emojiEl.classList.remove("celebrate-emoji");
+            showIdle();
+          } else {
+            // "Start" or "Next" — begin the current side
+            startSide();
+          }
+        });
+
+        // Initial state
+        showIdle();
+      })();
+    </script>
+  </body>
+</html>
