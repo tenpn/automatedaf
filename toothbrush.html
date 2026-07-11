@@ -21,7 +21,10 @@ permalink: /toothbrush/
 
       html,
       body {
-        height: 100%;
+        /* svh = the *small* viewport (Safari toolbars showing), so the layout
+           never extends behind the bottom toolbar. Avoid height:100%, which
+           resolves to the large viewport and hides content under the bar. */
+        min-height: 100svh;
       }
 
       body {
@@ -50,8 +53,9 @@ permalink: /toothbrush/
       .app {
         width: 100%;
         max-width: 640px;
-        min-height: 100svh;
-        padding: 0;
+        height: 100svh;
+        /* Keep clear of the home indicator / bottom toolbar. */
+        padding: 0 0 env(safe-area-inset-bottom, 0px);
         display: flex;
         flex-direction: column;
       }
@@ -64,8 +68,10 @@ permalink: /toothbrush/
         align-items: center;
         justify-content: center;
         gap: clamp(14px, 3vh, 32px);
-        /* No bottom padding: the button starts right below the quadrants */
-        padding: clamp(40px, 9vh, 88px) 20px 0;
+        /* No bottom padding: the button starts right below the quadrants.
+           Top padding clears the notch/status bar without wasting space. */
+        padding: max(clamp(16px, 4vh, 44px), env(safe-area-inset-top, 0px))
+          20px 0;
       }
 
       /* Reserve constant space so empty vs "Nice!" / emoji states don't
@@ -177,7 +183,7 @@ permalink: /toothbrush/
       .dial {
         flex: 1 1 auto;
         width: 100%;
-        min-height: 34svh;
+        min-height: 0; /* just fill the space below the quadrants */
         display: grid;
         place-items: center;
       }
