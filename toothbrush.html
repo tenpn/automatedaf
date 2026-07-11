@@ -54,8 +54,9 @@ permalink: /toothbrush/
         width: 100%;
         max-width: 640px;
         height: 100svh;
-        /* Keep clear of the home indicator / bottom toolbar. */
-        padding: 0 0 env(safe-area-inset-bottom, 0px);
+        /* Keep clear of the home indicator / floating bottom toolbar, plus a
+           bit of extra gap so the circle never touches the address bar. */
+        padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + clamp(28px, 6vh, 64px));
         display: flex;
         flex-direction: column;
       }
@@ -69,8 +70,8 @@ permalink: /toothbrush/
         justify-content: center;
         gap: clamp(14px, 3vh, 32px);
         /* No bottom padding: the button starts right below the quadrants.
-           Top padding clears the notch/status bar without wasting space. */
-        padding: max(clamp(16px, 4vh, 44px), env(safe-area-inset-top, 0px))
+           Minimal top padding — just clear the notch/status bar. */
+        padding: max(clamp(6px, 1.5vh, 20px), env(safe-area-inset-top, 0px))
           20px 0;
       }
 
