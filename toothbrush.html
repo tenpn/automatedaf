@@ -250,14 +250,21 @@ permalink: /toothbrush/
 
       .confetti {
         position: fixed;
-        top: -20px;
+        top: 0;
         font-size: 28px;
         animation: fall linear forwards;
         pointer-events: none;
+        will-change: transform;
       }
       @keyframes fall {
+        from {
+          /* Start well above the very top edge (behind the notch) so pieces
+             clearly rain down from the top of the screen. */
+          transform: translateY(-20vh) rotate(0);
+          opacity: 1;
+        }
         to {
-          transform: translateY(105vh) rotate(540deg);
+          transform: translateY(110vh) rotate(540deg);
           opacity: 0.2;
         }
       }
