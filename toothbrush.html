@@ -264,10 +264,10 @@ permalink: /toothbrush/
         <div class="headline" id="headline">Toothbrush Timer</div>
 
         <div class="mouth" id="mouth" aria-hidden="true">
-          <div class="quad tl" data-quad="1">😁</div>
-          <div class="quad tr" data-quad="0">😁</div>
-          <div class="quad bl" data-quad="3">😁</div>
-          <div class="quad br" data-quad="2">😁</div>
+          <div class="quad tl" data-quad="1">🙂</div>
+          <div class="quad tr" data-quad="0">🙂</div>
+          <div class="quad bl" data-quad="3">🙂</div>
+          <div class="quad br" data-quad="2">🙂</div>
         </div>
       </div>
 
@@ -293,12 +293,7 @@ permalink: /toothbrush/
       (function () {
         // 30s per side normally; ?debug shortens each side to 4s for testing.
         var SECONDS = /[?&]debug\b/.test(window.location.search) ? 4 : 30;
-        var SIDES = [
-          { name: "Top Right", emoji: "↗️" },
-          { name: "Top Left", emoji: "↖️" },
-          { name: "Bottom Right", emoji: "↘️" },
-          { name: "Bottom Left", emoji: "↙️" },
-        ];
+        var SIDE_COUNT = 4; // four mouth quadrants to brush
 
         var body = document.body;
         var emojiEl = document.getElementById("emoji");
@@ -328,12 +323,22 @@ permalink: /toothbrush/
 
         // ---- Sound: gentle Web Audio beep (no external files) ----
         var audioCtx = null;
-        function beep() {
-          try {
-            if (!audioCtx) {
+        // Create the AudioContext lazily (browsers require a user gesture);
+        // returns null if Web Audio isn't available.
+        function ensureAudio() {
+          if (!audioCtx) {
+            try {
               var AC = window.AudioContext || window.webkitAudioContext;
               audioCtx = new AC();
+            } catch (e) {
+              /* audio not available */
             }
+          }
+          return audioCtx;
+        }
+        function beep() {
+          if (!ensureAudio()) return;
+          try {
             var now = audioCtx.currentTime;
             [0, 0.18].forEach(function (offset) {
               var osc = audioCtx.createOscillator();
@@ -385,9 +390,9 @@ permalink: /toothbrush/
           brushing = false;
           setBodySide(0);
           emojiEl.textContent = "🦷";
+          emojiEl.classList.remove("celebrate-emoji");
           headlineEl.textContent = "Toothbrush Timer";
           ringEl.classList.add("hidden");
-          mouthEl.style.display = "grid";
           paintMouth();
           btnFaceEl.textContent = "Start";
           btn.classList.remove("hidden");
@@ -441,7 +446,7 @@ permalink: /toothbrush/
           paintMouth();
           ringEl.classList.add("hidden");
 
-          if (current >= SIDES.length) {
+          if (current >= SIDE_COUNT) {
             celebrate();
             return;
           }
@@ -484,21 +489,14 @@ permalink: /toothbrush/
         }
 
         btn.addEventListener("click", function () {
-          // Ensure audio can play (browsers require a user gesture)
-          if (!audioCtx) {
-            try {
-              var AC = window.AudioContext || window.webkitAudioContext;
-              audioCtx = new AC();
-            } catch (e) {}
-          }
-          if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+          // Unlock audio on this user gesture so the beep can play later.
+          if (ensureAudio() && audioCtx.state === "suspended") audioCtx.resume();
 
-          var label = btnFaceEl.textContent;
-          if (label === "Do it again") {
-            emojiEl.classList.remove("celebrate-emoji");
+          if (current >= SIDE_COUNT) {
+            // Finished the last side — "Do it again" resets to the start.
             showIdle();
           } else {
-            // "Start" or "Next" — begin the current side
+            // "Start" or "Next" — begin the current side.
             startSide();
           }
         });
