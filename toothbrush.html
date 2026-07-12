@@ -431,12 +431,25 @@ permalink: /toothbrush/
 
   <script>
     (function () {
-      // 30s per side normally; ?debug shortens each side to 4s for testing.
-      var DEBUG = /[?&]debug\b/.test(window.location.search);
-      var SECONDS = DEBUG ? 4 : 30;
+      // ?debug=<comma-separated qualities> tweaks behaviour for testing:
+      //   fast    — short per-side timers + get-ready hold
+      //   fortune — skip brushing, jump straight to the "Reveal fortune" screen
+      // A bare ?debug (no value) is treated as "fast" for backwards compat.
+      var debugParam = new URLSearchParams(window.location.search).get("debug");
+      var DEBUG = {};
+      if (debugParam !== null) {
+        (debugParam === "" ? "fast" : debugParam).split(",").forEach(function (q) {
+          q = q.trim();
+          if (q) DEBUG[q] = true;
+        });
+      }
+      var DEBUG_FAST = !!DEBUG.fast;
+      var DEBUG_FORTUNE = !!DEBUG.fortune;
+
+      var SECONDS = DEBUG_FAST ? 4 : 30; // seconds per side (short when fast)
       var SIDE_COUNT = 4; // four mouth quadrants to brush
       // "Get ready" hold after tapping Start/Next before the countdown runs.
-      var READY_MS = DEBUG ? 1000 : 2000;
+      var READY_MS = DEBUG_FAST ? 1000 : 2000;
       // End-sequence timings: how long the celebration holds before the
       // "Reveal fortune" button appears, and how long the fortune shows
       // before the "Do it again" button appears.
@@ -781,8 +794,24 @@ permalink: /toothbrush/
         }
       });
 
+      // Debug helper: skip brushing and drop straight into the celebration,
+      // which then offers the "Reveal fortune" button.
+      function startAtFortune() {
+        order = shuffle([0, 1, 2, 3]);
+        step = SIDE_COUNT; // treat every quadrant as already brushed
+        brushing = false;
+        arming = false;
+        pendingAction = null;
+        paintMouth(); // all four corners show clean smiles
+        celebrate();
+      }
+
       // Initial state
-      showIdle();
+      if (DEBUG_FORTUNE) {
+        startAtFortune();
+      } else {
+        showIdle();
+      }
     })();
   </script>
 </body>
