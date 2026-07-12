@@ -328,7 +328,8 @@ permalink: /toothbrush/
     .fortune-emoji {
       font-size: clamp(96px, 30vw, 220px);
       line-height: 1;
-      opacity: 0; /* held hidden until it tweens in after a short delay */
+      opacity: 0;
+      /* held hidden until it tweens in after a short delay */
     }
 
     /* Pop-in: fade up while shrinking from oversized down to actual size. */
@@ -460,12 +461,24 @@ permalink: /toothbrush/
       // Pause after "Your fortune is:" appears before the animal pops in.
       var FORTUNE_EMOJI_DELAY = 700;
 
-      // Allow-list of fortune animals — one is picked at random on reveal.
-      var ANIMAL_EMOJI = [
+      // Allow-list of fortune emoji — one is picked at random on reveal.
+      // A mix of friendly animals, a little magic, treats, and a few
+      // (kid-friendly) spooky ones.
+      var FORTUNE_EMOJI = [
+        // Animals
         "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯",
         "🦁", "🐮", "🐷", "🐸", "🐵", "🐔", "🐧", "🐦", "🦆", "🦉",
         "🐴", "🦄", "🐝", "🦋", "🐢", "🐙", "🐬", "🐳", "🦈", "🦖",
-        "🦕", "🦒", "🦘", "🦔", "🦦", "🦥", "🦩", "🦭", "🐊", "🦓"
+        "🦕", "🦒", "🦘", "🦔", "🦦", "🦥", "🦩", "🦭", "🐊", "🦓",
+        "🐠", "🐞", "🦚", "🦜", "🦢", "🐿️", "🐘", "🦛", "🐣", "🦌",
+        // Magic & wonder
+        "🐉", "🧚", "🧜", "🧞", "🏰", "🚀",
+        // Playful
+        "🎈", "🎁", "🪁", "⛵", "🎠", "🌻", "🌸", "🌊",
+        // Treats
+        "🍭", "🍬", "🧁", "🍦", "🍩", "🎂",
+        // Spooky
+        "👻", "🕷️", "🧟", "🪦"
       ];
 
       var body = document.body;
@@ -732,8 +745,8 @@ permalink: /toothbrush/
         }, REVEAL_MS);
       }
 
-      function pickAnimal() {
-        return ANIMAL_EMOJI[Math.floor(Math.random() * ANIMAL_EMOJI.length)];
+      function pickFortune() {
+        return FORTUNE_EMOJI[Math.floor(Math.random() * FORTUNE_EMOJI.length)];
       }
 
       function revealFortune() {
@@ -753,7 +766,7 @@ permalink: /toothbrush/
         // Reveal the slot now (the emoji is opacity:0 until it pops in) so the
         // layout is settled before the animal appears.
         fortuneEmojiEl.classList.remove("reveal");
-        fortuneEmojiEl.textContent = pickAnimal();
+        fortuneEmojiEl.textContent = pickFortune();
         fortuneSlotEl.classList.remove("hidden");
 
         // Button stays hidden through the whole reveal.
