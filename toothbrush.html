@@ -434,6 +434,7 @@ permalink: /toothbrush/
       // ?debug=<comma-separated qualities> tweaks behaviour for testing:
       //   fast    — short per-side timers + get-ready hold
       //   fortune — skip brushing, jump straight to the "Reveal fortune" screen
+      //   night   — force the past-noon "Tonight, dream of:" fortune label
       // A bare ?debug (no value) is treated as "fast" for backwards compat.
       var debugParam = new URLSearchParams(window.location.search).get("debug");
       var DEBUG = {};
@@ -445,6 +446,7 @@ permalink: /toothbrush/
       }
       var DEBUG_FAST = !!DEBUG.fast;
       var DEBUG_FORTUNE = !!DEBUG.fortune;
+      var DEBUG_NIGHT = !!DEBUG.night;
 
       var SECONDS = DEBUG_FAST ? 4 : 30; // seconds per side (short when fast)
       var SIDE_COUNT = 4; // four mouth quadrants to brush
@@ -703,6 +705,12 @@ permalink: /toothbrush/
         btn.classList.remove("hidden");
       }
 
+      // "Night" = past noon local time (or forced via ?debug=night). After
+      // noon the fortune is framed as a bedtime dream.
+      function isNight() {
+        return DEBUG_NIGHT || new Date().getHours() >= 12;
+      }
+
       function celebrate() {
         body.className = "celebrate";
         // Keep the mouth visible — all four corners now show clean smiles.
@@ -716,7 +724,9 @@ permalink: /toothbrush/
 
         endTimeoutId = setTimeout(function () {
           endTimeoutId = null;
-          btnFaceEl.textContent = "Reveal fortune";
+          btnFaceEl.textContent = isNight()
+            ? "Reveal tonight's dream"
+            : "Reveal fortune";
           btn.classList.remove("hidden");
           pendingAction = revealFortune;
         }, REVEAL_MS);
@@ -735,6 +745,10 @@ permalink: /toothbrush/
         headlineEl.classList.add("hidden");
         mouthEl.classList.add("hidden");
 
+        // Past noon (local time) the fortune becomes a bedtime dream.
+        fortuneLabelEl.textContent = isNight()
+          ? "Tonight, dream of:"
+          : "Your fortune is:";
         fortuneLabelEl.classList.remove("hidden");
         // Reveal the slot now (the emoji is opacity:0 until it pops in) so the
         // layout is settled before the animal appears.
