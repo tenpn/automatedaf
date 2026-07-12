@@ -18,6 +18,11 @@ permalink: /toothbrush/
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* Generic "not shown" utility, toggled from JS via show()/hide(). */
+    .hidden {
+      display: none !important;
+    }
+
     html,
     body {
       /* svh = the *small* viewport (Safari toolbars showing), so the layout
@@ -123,10 +128,6 @@ permalink: /toothbrush/
       justify-content: center;
     }
 
-    .timer-ring.hidden {
-      display: none;
-    }
-
     .timer-ring svg {
       position: absolute;
       inset: 0;
@@ -156,7 +157,7 @@ permalink: /toothbrush/
       font-variant-numeric: tabular-nums;
       line-height: 1;
       letter-spacing: -0.03em;
-      transform: translateY(-0.052em)
+      transform: translateY(-0.052em);
     }
 
     /* Mouth map: 4 quadrants */
@@ -257,10 +258,6 @@ permalink: /toothbrush/
       justify-content: center;
     }
 
-    .btn.hidden {
-      display: none;
-    }
-
     /* ...but the visible control is a perfect circle, the same size as the
          timer ring and centered in the same spot, label in the middle. */
     .btn-face {
@@ -298,14 +295,6 @@ permalink: /toothbrush/
        quadrants / 🎉 / "You did it!". The label sits at the top (inside the
        stage); the emoji lives in its own slot that fills the gap between the
        label and the button, so it lands centred in between. */
-    .emoji.hidden,
-    .headline.hidden,
-    .mouth.hidden,
-    .fortune-label.hidden,
-    .fortune-slot.hidden {
-      display: none;
-    }
-
     .fortune-label {
       font-size: clamp(28px, 8vw, 56px);
       font-weight: 800;
@@ -314,9 +303,9 @@ permalink: /toothbrush/
     }
 
     /* Grows to fill the space between the label and the dial, centring the
-       animal within it. Zero flex-basis (matching .dial) so the split stays
-       50/50 whether or not the button is present — otherwise the emoji would
-       shift up when the button reappears. */
+       fortune emoji within it. Zero flex-basis (matching .dial) so the split
+       stays 50/50 whether or not the button is present — otherwise the emoji
+       would shift up when the button reappears. */
     .fortune-slot {
       flex: 1 1 0;
       min-height: 0;
@@ -406,7 +395,7 @@ permalink: /toothbrush/
       </div>
     </div>
 
-    <!-- The fortune animal sits in its own flexible slot between the label
+    <!-- The fortune emoji sits in its own flexible slot between the label
          above and the button below, so it appears centred in the gap. -->
     <div class="fortune-slot hidden" id="fortuneSlot" aria-hidden="true">
       <div class="fortune-emoji" id="fortuneEmoji"></div>
@@ -458,7 +447,7 @@ permalink: /toothbrush/
       // before the "Do it again" button appears.
       var REVEAL_MS = 1600;
       var FORTUNE_MS = 2000;
-      // Pause after "Your fortune is:" appears before the animal pops in.
+      // Pause after "Your fortune is:" appears before the emoji pops in.
       var FORTUNE_EMOJI_DELAY = 700;
 
       // Allow-list of fortune emoji — one is picked at random on reveal.
@@ -500,9 +489,8 @@ permalink: /toothbrush/
       // Brushing order is shuffled each session so the quadrants light up in
       // a random sequence; `step` tracks how many are done (0..SIDE_COUNT)
       // and order[step] is the quadrant currently active.
-      var order = [0, 1, 2, 3];
+      var order = freshOrder();
       var step = 0;
-      var remaining = SECONDS;
       var intervalId = null; // the per-second countdown
       var readyTimeoutId = null; // the "get ready" hold before a side starts
       var brushing = false; // true only while a side's timer is running
@@ -519,6 +507,21 @@ permalink: /toothbrush/
           arr[j] = t;
         }
         return arr;
+      }
+
+      // A fresh, randomly-shuffled brushing order [0..SIDE_COUNT-1].
+      function freshOrder() {
+        var arr = [];
+        for (var i = 0; i < SIDE_COUNT; i++) arr.push(i);
+        return shuffle(arr);
+      }
+
+      // Show/hide an element via the generic .hidden utility class.
+      function show(el) {
+        el.classList.remove("hidden");
+      }
+      function hide(el) {
+        el.classList.add("hidden");
       }
 
       function clearTimers() {
@@ -590,7 +593,7 @@ permalink: /toothbrush/
       function paintMouth() {
         var activeIdx = order[step]; // undefined once all sides are done
         quads.forEach(function (q) {
-          var idx = parseInt(q.getAttribute("data-quad"), 10);
+          var idx = Number(q.dataset.quad);
           var pos = order.indexOf(idx); // this corner's place in the order
           q.classList.remove("active", "done");
           if (pos < step) {
@@ -613,24 +616,24 @@ permalink: /toothbrush/
         clearTimers();
         pendingAction = null;
         step = 0;
-        order = shuffle([0, 1, 2, 3]); // fresh random order each session
-        remaining = SECONDS;
+        order = freshOrder(); // fresh random order each session
         brushing = false;
         arming = false;
         setBodySide(order[0]);
         emojiEl.textContent = "🦷";
-        emojiEl.classList.remove("celebrate-emoji", "hidden");
-        headlineEl.classList.remove("hidden");
+        emojiEl.classList.remove("celebrate-emoji");
+        show(emojiEl);
         headlineEl.textContent = "Toothbrush Timer";
+        show(headlineEl);
         // Restore the mouth map and clear any fortune from a previous round.
-        mouthEl.classList.remove("hidden");
-        fortuneLabelEl.classList.add("hidden");
-        fortuneSlotEl.classList.add("hidden");
+        show(mouthEl);
+        hide(fortuneLabelEl);
+        hide(fortuneSlotEl);
         fortuneEmojiEl.classList.remove("reveal");
-        ringEl.classList.add("hidden");
+        hide(ringEl);
         paintMouth();
         btnFaceEl.textContent = "Start";
-        btn.classList.remove("hidden");
+        show(btn);
       }
 
       function renderSide() {
@@ -649,10 +652,9 @@ permalink: /toothbrush/
         brushing = false;
         renderSide(); // sets colour + toothbrush on the active corner
         headlineEl.textContent = "Get ready…";
-        remaining = SECONDS;
-        timerEl.textContent = SECONDS; // hold on 30
-        ringEl.classList.remove("hidden");
-        btn.classList.add("hidden");
+        timerEl.textContent = SECONDS; // hold on the full time
+        show(ringEl);
+        hide(btn);
 
         // Ring empty and frozen during the hold.
         ringFillEl.style.transition = "none";
@@ -669,10 +671,10 @@ permalink: /toothbrush/
         brushing = true;
         headlineEl.textContent = "";
         paintMouth(); // keep the active corner lit as brushing begins
-        remaining = SECONDS;
+        var remaining = SECONDS;
         timerEl.textContent = remaining;
-        ringEl.classList.remove("hidden");
-        btn.classList.add("hidden");
+        show(ringEl);
+        hide(btn);
 
         // Snap the ring to empty, then let CSS fill it smoothly over the
         // whole side duration — matches the timer exactly at any length.
@@ -704,7 +706,7 @@ permalink: /toothbrush/
         arming = false;
         step += 1;
         paintMouth();
-        ringEl.classList.add("hidden");
+        hide(ringEl);
 
         if (step >= SIDE_COUNT) {
           celebrate();
@@ -715,7 +717,7 @@ permalink: /toothbrush/
         headlineEl.textContent = "Nice!";
         emojiEl.textContent = "👍";
         btnFaceEl.textContent = "Next";
-        btn.classList.remove("hidden");
+        show(btn);
       }
 
       // "Night" = past noon local time (or forced via ?debug=night). After
@@ -727,12 +729,12 @@ permalink: /toothbrush/
       function celebrate() {
         body.className = "celebrate";
         // Keep the mouth visible — all four corners now show clean smiles.
-        ringEl.classList.add("hidden");
+        hide(ringEl);
         emojiEl.textContent = "🎉";
         emojiEl.classList.add("celebrate-emoji");
         headlineEl.textContent = "You did it!";
         // Hide the button; it comes back shortly as "Reveal fortune".
-        btn.classList.add("hidden");
+        hide(btn);
         launchConfetti();
 
         endTimeoutId = setTimeout(function () {
@@ -740,7 +742,7 @@ permalink: /toothbrush/
           btnFaceEl.textContent = isNight()
             ? "Reveal tonight's dream"
             : "Reveal fortune";
-          btn.classList.remove("hidden");
+          show(btn);
           pendingAction = revealFortune;
         }, REVEAL_MS);
       }
@@ -751,28 +753,28 @@ permalink: /toothbrush/
 
       function revealFortune() {
         // Swap the celebration (quadrants + 🎉 + "You did it!") for the
-        // "Your fortune is:" label. The animal is held back briefly, then
+        // "Your fortune is:" label. The emoji is held back briefly, then
         // tweened in.
         emojiEl.classList.remove("celebrate-emoji");
-        emojiEl.classList.add("hidden");
-        headlineEl.classList.add("hidden");
-        mouthEl.classList.add("hidden");
+        hide(emojiEl);
+        hide(headlineEl);
+        hide(mouthEl);
 
         // Past noon (local time) the fortune becomes a bedtime dream.
         fortuneLabelEl.textContent = isNight()
           ? "Tonight, dream of:"
           : "Your fortune is:";
-        fortuneLabelEl.classList.remove("hidden");
+        show(fortuneLabelEl);
         // Reveal the slot now (the emoji is opacity:0 until it pops in) so the
-        // layout is settled before the animal appears.
+        // layout is settled before the emoji appears.
         fortuneEmojiEl.classList.remove("reveal");
         fortuneEmojiEl.textContent = pickFortune();
-        fortuneSlotEl.classList.remove("hidden");
+        show(fortuneSlotEl);
 
         // Button stays hidden through the whole reveal.
-        btn.classList.add("hidden");
+        hide(btn);
 
-        // 1) After a beat, pop the animal in (fade + shrink to size)…
+        // 1) After a beat, pop the emoji in (fade + shrink to size)…
         endTimeoutId = setTimeout(function () {
           void fortuneEmojiEl.offsetWidth; // reflow so the animation retriggers
           fortuneEmojiEl.classList.add("reveal");
@@ -781,7 +783,7 @@ permalink: /toothbrush/
           endTimeoutId = setTimeout(function () {
             endTimeoutId = null;
             btnFaceEl.textContent = "Do it again";
-            btn.classList.remove("hidden");
+            show(btn);
             pendingAction = showIdle;
           }, FORTUNE_MS);
         }, FORTUNE_EMOJI_DELAY);
@@ -796,7 +798,7 @@ permalink: /toothbrush/
           c.style.left = ((i * 37) % 100) + "vw";
           c.style.animationDuration = 2 + ((i % 5) * 0.4) + "s";
           c.style.animationDelay = (i % 6) * 0.15 + "s";
-          document.body.appendChild(c);
+          body.appendChild(c);
           (function (node) {
             setTimeout(function () {
               if (node.parentNode) node.parentNode.removeChild(node);
@@ -824,7 +826,7 @@ permalink: /toothbrush/
       // Debug helper: skip brushing and drop straight into the celebration,
       // which then offers the "Reveal fortune" button.
       function startAtFortune() {
-        order = shuffle([0, 1, 2, 3]);
+        order = freshOrder();
         step = SIDE_COUNT; // treat every quadrant as already brushed
         brushing = false;
         arming = false;
