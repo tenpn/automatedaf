@@ -319,6 +319,22 @@ permalink: /toothbrush/
       line-height: 1;
       opacity: 0;
       /* held hidden until it tweens in after a short delay */
+      white-space: nowrap;
+      --pop-scale: 2.6;
+      /* how oversized the pop-in starts */
+    }
+
+    /* Two or three emoji in a row have to be smaller to fit the width, and
+       start the pop-in less oversized so the row doesn't blow past the edges
+       of the screen mid-tween. */
+    .fortune-emoji.count-2 {
+      font-size: clamp(72px, 24vw, 170px);
+      --pop-scale: 2;
+    }
+
+    .fortune-emoji.count-3 {
+      font-size: clamp(52px, 17vw, 120px);
+      --pop-scale: 1.7;
     }
 
     /* Pop-in: fade up while shrinking from oversized down to actual size. */
@@ -329,7 +345,7 @@ permalink: /toothbrush/
     @keyframes fortune-pop {
       from {
         opacity: 0;
-        transform: scale(2.6);
+        transform: scale(var(--pop-scale));
       }
 
       to {
@@ -425,6 +441,8 @@ permalink: /toothbrush/
       //   fast    — short per-side timers + get-ready hold
       //   fortune — skip brushing, jump straight to the "Reveal fortune" screen
       //   night   — force the past-noon "Tonight, dream of:" fortune label
+      //   two     — force a two-emoji fortune (verb + subject)
+      //   three   — force a three-emoji fortune (subject + verb + subject)
       // A bare ?debug (no value) is treated as "fast" for backwards compat.
       var debugParam = new URLSearchParams(window.location.search).get("debug");
       var DEBUG = {};
@@ -437,6 +455,8 @@ permalink: /toothbrush/
       var DEBUG_FAST = !!DEBUG.fast;
       var DEBUG_FORTUNE = !!DEBUG.fortune;
       var DEBUG_NIGHT = !!DEBUG.night;
+      var DEBUG_TWO = !!DEBUG.two;
+      var DEBUG_THREE = !!DEBUG.three;
 
       var SECONDS = DEBUG_FAST ? 4 : 30; // seconds per side (short when fast)
       var SIDE_COUNT = 4; // four mouth quadrants to brush
@@ -450,9 +470,8 @@ permalink: /toothbrush/
       // Pause after "Your fortune is:" appears before the emoji pops in.
       var FORTUNE_EMOJI_DELAY = 700;
 
-      // Allow-list of fortune emoji — one is picked at random on reveal.
-      // A mix of friendly animals, a little magic, treats, and a few
-      // (kid-friendly) spooky ones.
+      // Allow-list of fortune "subjects" — a mix of friendly animals, a little
+      // magic, treats, and a few (kid-friendly) spooky ones.
       var FORTUNE_EMOJI = [
         // Animals
         "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯",
@@ -468,6 +487,13 @@ permalink: /toothbrush/
         "🍭", "🍬", "🧁", "🍦", "🍩", "🎂",
         // Spooky
         "👻", "🕷️", "🧟", "🪦"
+      ];
+
+      // "Verb" emoji — the action joining subjects, e.g. 🐶⚔️🐱 (dog fights
+      // cat). Only used in the two- and three-emoji fortunes.
+      var VERB_EMOJI = [
+        "⚔️", "❤️", "🤝", "🤗", "💤", "🎶", "💃", "🏃",
+        "🍴", "🪥", "🏆", "⚡", "👀", "🎨", "🤼", "🥊"
       ];
 
       var body = document.body;
@@ -629,7 +655,7 @@ permalink: /toothbrush/
         show(mouthEl);
         hide(fortuneLabelEl);
         hide(fortuneSlotEl);
-        fortuneEmojiEl.classList.remove("reveal");
+        fortuneEmojiEl.classList.remove("reveal", "count-2", "count-3");
         hide(ringEl);
         paintMouth();
         btnFaceEl.textContent = "Start";
@@ -747,8 +773,43 @@ permalink: /toothbrush/
         }, REVEAL_MS);
       }
 
+      function pickFrom(list) {
+        return list[Math.floor(Math.random() * list.length)];
+      }
+
+      // How many emoji the fortune shows: 50% one, 35% two, 15% three.
+      // ?debug=two / ?debug=three force a count.
+      function fortuneCount() {
+        if (DEBUG_THREE) return 3;
+        if (DEBUG_TWO) return 2;
+        var r = Math.random();
+        if (r < 0.5) return 1;
+        if (r < 0.85) return 2;
+        return 3;
+      }
+
+      // One  → a lone subject.
+      // Two  → verb + subject        (⚔️🐶)
+      // Three→ subject + verb + subject, the two subjects always different
+      //        (🐶⚔️🐱). Returns the text plus the count, which drives the
+      //        .count-N sizing class.
       function pickFortune() {
-        return FORTUNE_EMOJI[Math.floor(Math.random() * FORTUNE_EMOJI.length)];
+        var count = fortuneCount();
+        if (count === 1) {
+          return { text: pickFrom(FORTUNE_EMOJI), count: 1 };
+        }
+        if (count === 2) {
+          return {
+            text: pickFrom(VERB_EMOJI) + pickFrom(FORTUNE_EMOJI),
+            count: 2
+          };
+        }
+        var first = pickFrom(FORTUNE_EMOJI);
+        var second = pickFrom(FORTUNE_EMOJI);
+        while (second === first) {
+          second = pickFrom(FORTUNE_EMOJI); // keep the two subjects distinct
+        }
+        return { text: first + pickFrom(VERB_EMOJI) + second, count: 3 };
       }
 
       function revealFortune() {
@@ -767,8 +828,12 @@ permalink: /toothbrush/
         show(fortuneLabelEl);
         // Reveal the slot now (the emoji is opacity:0 until it pops in) so the
         // layout is settled before the emoji appears.
-        fortuneEmojiEl.classList.remove("reveal");
-        fortuneEmojiEl.textContent = pickFortune();
+        var fortune = pickFortune();
+        fortuneEmojiEl.classList.remove("reveal", "count-2", "count-3");
+        fortuneEmojiEl.textContent = fortune.text;
+        if (fortune.count > 1) {
+          fortuneEmojiEl.classList.add("count-" + fortune.count);
+        }
         show(fortuneSlotEl);
 
         // Button stays hidden through the whole reveal.
