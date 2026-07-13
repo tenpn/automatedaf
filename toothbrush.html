@@ -317,8 +317,6 @@ permalink: /toothbrush/
     .fortune-emoji {
       font-size: clamp(96px, 30vw, 220px);
       line-height: 1;
-      opacity: 0;
-      /* held hidden until it tweens in after a short delay */
       white-space: nowrap;
       --pop-scale: 2.6;
       /* how oversized the pop-in starts */
@@ -337,8 +335,17 @@ permalink: /toothbrush/
       --pop-scale: 1.7;
     }
 
+    /* One span per emoji. They hold their place (invisible) from the moment the
+       slot appears, so the row is centred and never shifts; then they pop in
+       one at a time from the left. The per-part delay is set inline in JS. */
+    .fortune-part {
+      display: inline-block;
+      /* inline elements can't be scaled */
+      opacity: 0;
+    }
+
     /* Pop-in: fade up while shrinking from oversized down to actual size. */
-    .fortune-emoji.reveal {
+    .fortune-emoji.reveal .fortune-part {
       animation: fortune-pop 0.55s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
     }
 
@@ -469,6 +476,8 @@ permalink: /toothbrush/
       var FORTUNE_MS = 2000;
       // Pause after "Your fortune is:" appears before the emoji pops in.
       var FORTUNE_EMOJI_DELAY = 700;
+      // Gap between each emoji popping in, when a fortune has more than one.
+      var FORTUNE_STAGGER_MS = 300;
 
       // Allow-list of fortune "subjects" — a mix of friendly animals, a little
       // magic, treats, and a few (kid-friendly) spooky ones.
@@ -791,25 +800,18 @@ permalink: /toothbrush/
       // One  → a lone subject.
       // Two  → verb + subject        (⚔️🐶)
       // Three→ subject + verb + subject, the two subjects always different
-      //        (🐶⚔️🐱). Returns the text plus the count, which drives the
-      //        .count-N sizing class.
+      //        (🐶⚔️🐱). Returns one emoji per array entry, so each can be
+      //        rendered as its own element and faded in separately.
       function pickFortune() {
         var count = fortuneCount();
-        if (count === 1) {
-          return { text: pickFrom(FORTUNE_EMOJI), count: 1 };
-        }
-        if (count === 2) {
-          return {
-            text: pickFrom(VERB_EMOJI) + pickFrom(FORTUNE_EMOJI),
-            count: 2
-          };
-        }
+        if (count === 1) return [pickFrom(FORTUNE_EMOJI)];
+        if (count === 2) return [pickFrom(VERB_EMOJI), pickFrom(FORTUNE_EMOJI)];
         var first = pickFrom(FORTUNE_EMOJI);
         var second = pickFrom(FORTUNE_EMOJI);
         while (second === first) {
           second = pickFrom(FORTUNE_EMOJI); // keep the two subjects distinct
         }
-        return { text: first + pickFrom(VERB_EMOJI) + second, count: 3 };
+        return [first, pickFrom(VERB_EMOJI), second];
       }
 
       function revealFortune() {
@@ -826,31 +828,42 @@ permalink: /toothbrush/
           ? "Tonight, dream of:"
           : "Your fortune is:";
         show(fortuneLabelEl);
-        // Reveal the slot now (the emoji is opacity:0 until it pops in) so the
-        // layout is settled before the emoji appears.
-        var fortune = pickFortune();
+        // Build the row now — each emoji is opacity:0 until it pops in, so the
+        // layout is settled and centred before anything appears.
+        var parts = pickFortune();
         fortuneEmojiEl.classList.remove("reveal", "count-2", "count-3");
-        fortuneEmojiEl.textContent = fortune.text;
-        if (fortune.count > 1) {
-          fortuneEmojiEl.classList.add("count-" + fortune.count);
+        if (parts.length > 1) {
+          fortuneEmojiEl.classList.add("count-" + parts.length);
         }
+        // One span per emoji, each delayed a little more than the last, so they
+        // fade in left to right instead of all at once.
+        fortuneEmojiEl.textContent = "";
+        parts.forEach(function (emoji, i) {
+          var part = document.createElement("span");
+          part.className = "fortune-part";
+          part.textContent = emoji;
+          part.style.animationDelay = i * FORTUNE_STAGGER_MS + "ms";
+          fortuneEmojiEl.appendChild(part);
+        });
         show(fortuneSlotEl);
 
         // Button stays hidden through the whole reveal.
         hide(btn);
 
-        // 1) After a beat, pop the emoji in (fade + shrink to size)…
+        // 1) After a beat, pop the emoji in (fade + shrink to size), one at a
+        //    time from the left…
         endTimeoutId = setTimeout(function () {
-          void fortuneEmojiEl.offsetWidth; // reflow so the animation retriggers
           fortuneEmojiEl.classList.add("reveal");
 
-          // 2) …then, after a moment to enjoy it, offer "Do it again".
+          // 2) …then, once the last one has landed, hold the finished fortune
+          //    for a moment before offering "Do it again".
+          var enjoyMs = FORTUNE_MS + (parts.length - 1) * FORTUNE_STAGGER_MS;
           endTimeoutId = setTimeout(function () {
             endTimeoutId = null;
             btnFaceEl.textContent = "Do it again";
             show(btn);
             pendingAction = showIdle;
-          }, FORTUNE_MS);
+          }, enjoyMs);
         }, FORTUNE_EMOJI_DELAY);
       }
 
