@@ -324,7 +324,8 @@ permalink: /toothbrush/
     .celebrate-emoji {
       font-size: clamp(84px, 24vw, 168px);
       line-height: 1;
-      animation: bounce 0.8s ease infinite;
+      /* Gentle swell-and-settle throb, like a slow heartbeat. */
+      animation: throb 1.6s ease-in-out infinite;
     }
 
     /* Fortune reveal — shown after the celebration, in place of the
@@ -397,15 +398,15 @@ permalink: /toothbrush/
       }
     }
 
-    @keyframes bounce {
+    @keyframes throb {
 
       0%,
       100% {
-        transform: translateY(0) rotate(-6deg);
+        transform: scale(1);
       }
 
       50% {
-        transform: translateY(-24px) rotate(6deg);
+        transform: scale(1.12);
       }
     }
 
