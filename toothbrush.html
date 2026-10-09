@@ -31,10 +31,19 @@ permalink: /toothbrush/
       min-height: 100svh;
     }
 
+    /* The page colour lives in --bg so the front-teeth box can use it too
+       (for its gap ring and opaque backing). Registered so it can animate. */
+    @property --bg {
+      syntax: "<color>";
+      inherits: true;
+      initial-value: #1e88e5;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         system-ui, sans-serif;
-      background: #1e88e5;
+      --bg: #1e88e5;
+      background: var(--bg);
       color: #fff;
       display: flex;
       align-items: stretch;
@@ -44,32 +53,37 @@ permalink: /toothbrush/
       user-select: none;
       -webkit-user-select: none;
       touch-action: manipulation;
-      transition: background 0.4s ease;
+      transition: --bg 0.4s ease;
     }
 
     /* Each side gets its own bold background colour */
     body.side-0 {
-      background: #43a047;
+      --bg: #43a047;
     }
 
     /* Top Right   */
     body.side-1 {
-      background: #1e88e5;
+      --bg: #1e88e5;
     }
 
     /* Top Left    */
     body.side-2 {
-      background: #8e24aa;
+      --bg: #8e24aa;
     }
 
     /* Bottom Right*/
     body.side-3 {
-      background: #f4511e;
+      --bg: #f4511e;
     }
 
     /* Bottom Left */
+    body.side-4 {
+      --bg: #00897b;
+    }
+
+    /* Front teeth */
     body.celebrate {
-      background: #ffb300;
+      --bg: #ffb300;
     }
 
     .app {
@@ -169,6 +183,7 @@ permalink: /toothbrush/
       grid-template-rows: 1fr 1fr;
       gap: 8px;
       margin: 0 auto;
+      position: relative;
     }
 
     .quad {
@@ -196,6 +211,27 @@ permalink: /toothbrush/
 
     .quad.bl {
       border-bottom-left-radius: 60px;
+    }
+
+    /* Fifth phase: front teeth. A box centred over the four quadrants. Its
+       backgrounds sit on an opaque layer of the page colour so the quads
+       underneath don't show through, and a thin 4px ring of the page colour
+       separates it from them. Centred with insets (not a transform) so the
+       active pulse animation still works. */
+    .quad.front {
+      position: absolute;
+      inset: 26% 25%;
+      border-radius: 18px;
+      background: linear-gradient(rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.22)), var(--bg);
+      box-shadow: 0 0 0 4px var(--bg);
+    }
+
+    .quad.front.done {
+      background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), var(--bg);
+    }
+
+    .quad.front.active {
+      background: #fff;
     }
 
     .quad.done {
@@ -410,6 +446,8 @@ permalink: /toothbrush/
         <div class="quad tr" data-quad="0">🙂</div>
         <div class="quad bl" data-quad="3">🙂</div>
         <div class="quad br" data-quad="2">🙂</div>
+        <!-- Fifth phase: front teeth, revealed when its phase starts. -->
+        <div class="quad front hidden" data-quad="4">🙂</div>
       </div>
 
       <!-- Fortune headline, shown at the end in place of the quadrants. -->
@@ -466,7 +504,16 @@ permalink: /toothbrush/
       var DEBUG_THREE = !!DEBUG.three;
 
       var SECONDS = DEBUG_FAST ? 4 : 30; // seconds per side (short when fast)
+      var FRONT_SECONDS = DEBUG_FAST ? 2 : 15; // seconds for the front teeth
       var SIDE_COUNT = 4; // four mouth quadrants to brush
+      var FRONT = SIDE_COUNT; // index of the front-teeth phase, always last
+      var STEP_COUNT = SIDE_COUNT + 1; // four sides + front teeth
+      // Front-teeth shake: peak jitter (px) and wobble (deg) reached right at
+      // the end of the timer, and how sharply it ramps up (higher = calmer
+      // for longer, then a steeper burst at the end).
+      var SHAKE_MAX_PX = 7;
+      var SHAKE_MAX_DEG = 6;
+      var SHAKE_RAMP = 4;
       // "Get ready" hold after tapping Start/Next before the countdown runs.
       var READY_MS = DEBUG_FAST ? 1000 : 2000;
       // End-sequence timings: how long the celebration holds before the
@@ -515,6 +562,7 @@ permalink: /toothbrush/
       var quads = Array.prototype.slice.call(
         mouthEl.querySelectorAll(".quad")
       );
+      var frontEl = mouthEl.querySelector(".quad.front");
       var btn = document.getElementById("btn");
       var btnFaceEl = document.getElementById("btnFace");
       var fortuneLabelEl = document.getElementById("fortuneLabel");
@@ -522,8 +570,8 @@ permalink: /toothbrush/
       var fortuneEmojiEl = document.getElementById("fortuneEmoji");
 
       // Brushing order is shuffled each session so the quadrants light up in
-      // a random sequence; `step` tracks how many are done (0..SIDE_COUNT)
-      // and order[step] is the quadrant currently active.
+      // a random sequence, always followed by the front teeth; `step` tracks
+      // how many are done (0..STEP_COUNT) and order[step] is the one active.
       var order = freshOrder();
       var step = 0;
       var intervalId = null; // the per-second countdown
@@ -531,6 +579,7 @@ permalink: /toothbrush/
       var brushing = false; // true only while a side's timer is running
       var arming = false; // true during the "get ready" hold
       var endTimeoutId = null; // celebration → fortune → restart delays
+      var shakeFrameId = null; // the front-teeth shake animation loop
       var pendingAction = null; // what the shared button does at the very end
 
       // Fisher–Yates shuffle (reorders the array in place and returns it).
@@ -544,11 +593,17 @@ permalink: /toothbrush/
         return arr;
       }
 
-      // A fresh, randomly-shuffled brushing order [0..SIDE_COUNT-1].
+      // A fresh brushing order: the sides [0..SIDE_COUNT-1] shuffled, then
+      // the front teeth last.
       function freshOrder() {
         var arr = [];
         for (var i = 0; i < SIDE_COUNT; i++) arr.push(i);
-        return shuffle(arr);
+        return shuffle(arr).concat([FRONT]);
+      }
+
+      // How long the given phase's timer runs.
+      function secondsFor(idx) {
+        return idx === FRONT ? FRONT_SECONDS : SECONDS;
       }
 
       // Show/hide an element via the generic .hidden utility class.
@@ -572,6 +627,41 @@ permalink: /toothbrush/
           clearTimeout(endTimeoutId);
           endTimeoutId = null;
         }
+        stopShake();
+      }
+
+      // ---- Front-teeth shake ----
+      // Vibrates (random per-frame jitter) and shakes (a fast rotational
+      // wobble) the front box while its timer runs, with the magnitude growing
+      // exponentially towards the end. Uses the individual `translate` /
+      // `rotate` properties so it composes with the .active pulse animation's
+      // `transform` instead of being overridden by it.
+      function startShake(seconds) {
+        stopShake();
+        var start = performance.now();
+        var durationMs = seconds * 1000;
+        var norm = Math.exp(SHAKE_RAMP) - 1;
+        function frame(now) {
+          var t = Math.min((now - start) / durationMs, 1);
+          // 0 at the start, 1 at the end, exponential in between.
+          var k = (Math.exp(SHAKE_RAMP * t) - 1) / norm;
+          var px = SHAKE_MAX_PX * k;
+          var x = (Math.random() * 2 - 1) * px;
+          var y = (Math.random() * 2 - 1) * px;
+          var deg = SHAKE_MAX_DEG * k * Math.sin(now / 35);
+          frontEl.style.translate = x.toFixed(2) + "px " + y.toFixed(2) + "px";
+          frontEl.style.rotate = deg.toFixed(2) + "deg";
+          shakeFrameId = requestAnimationFrame(frame);
+        }
+        shakeFrameId = requestAnimationFrame(frame);
+      }
+      function stopShake() {
+        if (shakeFrameId) {
+          cancelAnimationFrame(shakeFrameId);
+          shakeFrameId = null;
+        }
+        frontEl.style.translate = "";
+        frontEl.style.rotate = "";
       }
 
       // ---- Circular progress ring ----
@@ -627,6 +717,10 @@ permalink: /toothbrush/
 
       function paintMouth() {
         var activeIdx = order[step]; // undefined once all sides are done
+        // The front-teeth box only appears once its phase starts (Next tapped
+        // after the four sides), and stays from then on.
+        if (step > FRONT || (step === FRONT && (brushing || arming))) show(frontEl);
+        else hide(frontEl);
         quads.forEach(function (q) {
           var idx = Number(q.dataset.quad);
           var pos = order.indexOf(idx); // this corner's place in the order
@@ -687,7 +781,7 @@ permalink: /toothbrush/
         brushing = false;
         renderSide(); // sets colour + toothbrush on the active corner
         headlineEl.textContent = "Get ready…";
-        timerEl.textContent = SECONDS; // hold on the full time
+        timerEl.textContent = secondsFor(order[step]); // hold on the full time
         show(ringEl);
         hide(btn);
 
@@ -706,7 +800,8 @@ permalink: /toothbrush/
         brushing = true;
         headlineEl.textContent = "";
         paintMouth(); // keep the active corner lit as brushing begins
-        var remaining = SECONDS;
+        var seconds = secondsFor(order[step]);
+        var remaining = seconds;
         timerEl.textContent = remaining;
         show(ringEl);
         hide(btn);
@@ -717,8 +812,10 @@ permalink: /toothbrush/
         setRing(0);
         void ringFillEl.getBoundingClientRect(); // force reflow
         ringFillEl.style.transition =
-          "stroke-dashoffset " + SECONDS + "s linear";
+          "stroke-dashoffset " + seconds + "s linear";
         setRing(1);
+
+        if (order[step] === FRONT) startShake(seconds);
 
         intervalId = setInterval(function () {
           remaining -= 1;
@@ -730,6 +827,7 @@ permalink: /toothbrush/
           clearInterval(intervalId);
           intervalId = null;
           timerEl.textContent = 0;
+          stopShake();
           beep();
           finishSide();
         }, 1000);
@@ -743,7 +841,7 @@ permalink: /toothbrush/
         paintMouth();
         hide(ringEl);
 
-        if (step >= SIDE_COUNT) {
+        if (step >= STEP_COUNT) {
           celebrate();
           return;
         }
@@ -763,7 +861,8 @@ permalink: /toothbrush/
 
       function celebrate() {
         body.className = "celebrate";
-        // Keep the mouth visible — all four corners now show clean smiles.
+        // Keep the mouth visible — all four corners and the front teeth now
+        // show clean smiles.
         hide(ringEl);
         emojiEl.textContent = "🎉";
         emojiEl.classList.add("celebrate-emoji");
@@ -905,11 +1004,11 @@ permalink: /toothbrush/
       // which then offers the "Reveal fortune" button.
       function startAtFortune() {
         order = freshOrder();
-        step = SIDE_COUNT; // treat every quadrant as already brushed
+        step = STEP_COUNT; // treat every phase as already brushed
         brushing = false;
         arming = false;
         pendingAction = null;
-        paintMouth(); // all four corners show clean smiles
+        paintMouth(); // all corners + front teeth show clean smiles
         celebrate();
       }
 
