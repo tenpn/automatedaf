@@ -1,0 +1,36 @@
+---
+layout: post
+title: "What do ✨actionable✨ tests look like?"
+date: 2026-06-16 16:21:49 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 190448976666822538
+---
+
+<p> An actionable failure is one that helps you get to the crux of the matter quickly. You don't want to have to load up the test to see what it was actually asserting, or go scrub a log, just so you can do the fix.</p>
+
+<p>How do you write tests so they'll be actionable?</p>
+
+<h2>📛Informative test name</h2>
+
+<p>"ChecksWorking" is a really bad test name! You want a good idea from the test of what's being tested and how it's being tested. That means specifics, and that means long test names, and that's fine.</p>
+
+<p>Even once you've got a long test name, you want to be very literal. HighScore_OnFirstBoot_IsInvalid is still not great - what does "is invalid" mean here? Is it returning null for a high score? Is it returning -1? HighScore_OnFirstBoot_IsMinus1 is much better.</p>
+
+<p>Now if you see that fail, and you know the code, you might have a good chance of jumping straight to the bug.</p>
+
+<h2>🫥Full picture</h2>
+
+<p>Sometimes the name is enough but sometimes you want to see the details. Your test should be readable so that you can easily tell how the test sets up the context and what it does with the results. </p>
+
+<p>One of the most common ways for new testers to get this wrong is by putting multiple asserts in a test. I get why this is attractive: if an existing test works exactly as you expect already, it's really tempting to just slip in another assert to test a different bit of state. </p>
+
+<p>However most test frameworks will stop running a test after the first failure, so you don't get the full picture on what's working. If the _second_ assert would have given more context on the broken code, but it never ran, then you're not getting the full picture. </p>
+
+<p>It's ok to copy-paste your tests, at least to begin with. Then you can lean on fixtures to share setup/teardown code, as well as custom helper functions, to make it easy to bootstrap new tests in your library and get the full picture on every run.</p>
+
+<h2>⬆️Surfaced errors</h2>
+
+<p>If a test claims a failure, it should show the appropriate error along with it. This is especially important for things like smoke tests, that might fail on unknown log errors. Use Jenkins' Build Failure Analyzer plugin, or Teamcity's failOnText to capture potential log problems to the top level. <br /><br />If you're posting a failure to slack or some other chat app, make sure the failures go with it too. Don't make people click through unless there's a really strong reason to - they should be able to diagnose the whole problem from just the slack post. <br /></p>
+
+<p>What factors of actionable test did I miss? Come and tell me on the Automated Testing In Games discord: <a href="https://atig.dev">https://atig.dev</a></p>

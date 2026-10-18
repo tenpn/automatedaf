@@ -1,0 +1,42 @@
+---
+layout: post
+title: "Shoring up your least reliable features with Ringfenced Regressions"
+date: 2026-09-14 19:05:34 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 198611778091877951
+---
+
+<p>People often ask me how to get started with test automation, especially when you might not have a lot of attention to devote to it, and the answer is always: ringfenced regressions. Which is made up of two parts: the ringfence, and regression tests.</p>
+
+<h2>Ringfencing</h2>
+
+<p>First, identify the area of your game that will benefit most from automation. That could be a system that's core to your game pillars, or a module that's been particularly flaky in the past. </p>
+
+<p>For instance, if you're making a turn-based RPG, having an ability system you can rely on will be really valuable. If you know that system is currently buggy and hard to work in, then all the better. </p>
+
+<p>This system becomes your ringfence.</p>
+
+<p>Conversely, your turn-based RPG isn't defined by its volume slider, and once that slider works once it will probably stay working. Picking this area as your ringfence is less useful.</p>
+
+<h2>Regression Tests</h2>
+
+<p>Any time that a bug lands inside your ringfence, create an automated regression test to go with it. Fixes are always committed with regression tests.</p>
+
+<p>It almost doesn't matter how long it takes you to make that test, or how critical the bug is. By definition this is a valuable area of the game to be working in. </p>
+
+<p>And slowly, as you add regression tests to this area, it'll become faster and faster to build tests.</p>
+
+<p>(Creating tests in legacy code like this doesn't require rebuilding everything from scratch, but that's beyond the scope of this post) <br /></p>
+
+<p>Every single test you create will have obvious value, because they're stopping real bugs from coming back. Building value into your tests is not always easy for beginners, so this is a huge step up.<br /></p>
+
+<h2>Growing automation</h2>
+
+<p>Very quickly you'll find this ringfenced area of the game go from unstable to one of the most reliable parts of the game. Programmers will hit regressions locally, and problems will fixed before the code is even pushed, long before it would have seen players or QA. </p>
+
+<p>That initial investment in creating the early automation will pay itself off quickly, and then see upsides from increased productivity. And every time I've seen this followed through, the team has quietly and naturally started building automation around new features, not just regressions. </p>
+
+<p>You could start today, in a small but vital area of your project. And if you want extra help figuring out how to start writing your tests, reach out. I help studios of all sizes get started with this stuff.</p>
+
+<p>Happy ringfencing!</p>

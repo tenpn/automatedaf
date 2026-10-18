@@ -1,0 +1,24 @@
+---
+layout: post
+title: "Build Validation Through Metrics"
+date: 2026-01-27 09:16:12 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 177738287947973643
+---
+
+<p> A few weeks ago we were talking about the gap between "we've got a build server" and "we have test automation". </p>
+
+<p> One option we discussed then was log scanning for common problems, rather than writing a formal test in a test framework. Today I wanted to discuss another approach: build validation through metrics. </p>
+
+<p> One really simple thing most people can do today is fail the build if the build size passes some agreed-upon threshold. There's nothing worse than reaching the end of dev and discovering you need to trim 500mb to fit in download limits! Again, this requires no SDK integration into the build nor training in test frameworks. </p>
+
+<p> This is effective but pretty crude - you might have to do some digging to find out who broke the camel's back. You could also alert based on a large jump in build size compared with the previous build, but even better is a stats dashboard like grafana, which can be free to self-host. TeamCity even has time-series graphing built-in! </p>
+
+<p> Other stats that might be useful to track include: </p>
+
+<p> - Single largest asset<br /> - Compile time<br /> - Cook/build time<br /> - Time to boot to main menu, if you have simple smoke testing<br /> - Performance metrics </p>
+
+<p> And while it's bad if any of these stats jump, track if they suddenly fall too - if your main menu boot time is suddenly milliseconds, that's a sign that something's gone wrong with the build! </p>
+
+<p> Happy testing! </p>

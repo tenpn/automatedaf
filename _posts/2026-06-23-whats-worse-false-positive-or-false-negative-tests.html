@@ -1,0 +1,42 @@
+---
+layout: post
+title: "What's worse, false positive or false negative tests?"
+date: 2026-06-23 19:17:47 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 191092678726780281
+---
+
+<p>Tests can start to go wrong in lots of ways, but two of the most common are false positive and false negative. What's the difference, and which is more insidious?</p>
+
+<h2>False Positives</h2>
+
+<p>These tests can<em> fail while the behaviour they're testing for is still working</em>. (It feels unintuitive to some to call failures "positive", but a failing test is being assertive (literally, I guess?) and giving information, so it's called Positive)</p>
+
+<p>This can happen because the test is buggy. Most simply, the assert can just be backwards, testing for true instead of false. This is why I always prefer var == false over !var, the latter is much more subtle!</p>
+
+<p>The test could also be correctly written, but depends on a second behaviour to work, and <em>that</em> behaviour is broken. That second behaviour might come from a completely separate system that you're using to keep test admin to a minimum. </p>
+
+<p>As long as your test does still actually fail when the behaviour under test is broken, then your test still has some value. If it <em>only</em> fails when other systems break, then you've got a genuine problem to fix.</p>
+
+<p>Sometimes <em>false positives are the cost of doing business</em>. Although it would be wonderful if we lived in a world where one bug causes exactly one test failure, real life intrudes. Sometimes it's impractical to eliminate all dependencies, and there's value still in having tests that can be prone to false positives. </p>
+
+<p>Often, with familiarity with a system, it's easy to identify the One True Failure under a cascade of false positives - if System B depends on System A, and both A and B tests are failing, you should look at the A tests first. </p>
+
+<p>However you should keep an eye on things. If there's some tests that are prone to failing all the time, you might want to look more closely at how you can isolate them. <em>It can be draining to trawl through hundreds of failures to find the real problem</em>. <br /></p>
+
+<h2>False Negatives</h2>
+
+<p>False negatives <em>pass when the behaviour they're testing is actually broken</em>. As you can imagine, the absence of information is much harder to keep an eye on.</p>
+
+<p>A suite of false negatives can give you false confidence that the system is working when it's actually super buggy. All that work writing, maintaining and executing the tests is providing absolutely no value. This makes false negatives a <em>much bigger threat </em>than false positives.</p>
+
+<p>More often than not this is a broken test. Maybe it's accidentally running against test functionality, not production code, or it's misconfigured its dependency injection. Or it's just a simple logic bug!</p>
+
+<p>The best way to prevent false positives is to test your tests - you should always make sure you see a new test failing against broken production code. </p>
+
+<p>That could be because you are doing <a href="https://martinfowler.com/bliki/TestDrivenDevelopment.html">Test Driven Development</a> and so writing the failing test before creating the code in the first place. Or maybe you're doing a regression test against a bug, and can easily revert your fix to test. </p>
+
+<p>But if you're testing behaviour that's not broken, it's beholden on you to fuzz it in such a way that you see your test fail. </p>
+
+<p>In fact, I'd go as far to say that <em>no test should get pushed live until you've seen it fail once!</em> </p>

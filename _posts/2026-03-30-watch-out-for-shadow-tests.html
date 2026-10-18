@@ -1,0 +1,26 @@
+---
+layout: post
+title: "Watch Out For Shadow Tests"
+date: 2026-03-30 16:51:47 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 183348351975032742
+---
+
+<p> <a href="/2026/03/23/do-passing-tests-provide-any-value/">Last week&#8217;s post</a> about how tests that don't fail don't really provide value. They don't get to do what every test lives to do: fail, and give you actionable instant feedback on a new defect. </p>
+
+<p> Yet even though they're not really providing value, they have to be written, they have to be maintained, and they have to be executed. </p>
+
+<p> There's another type of test that _does_ fail but provides no value when it does: the shadow test. </p>
+
+<p> The shadow test is a test that only ever fails when another test fails. There could be a few reasons for this, but the most likely is that both tests are checking the same thing through different means. </p>
+
+<p> I've seen this most commonly when people have a test fixture up and running, and add tests without plausibility, just "because they can" and "it can't hurt". </p>
+
+<p> When you find one of these, it's worth investigating closely and making sure it's truly doing something independent and valuable. If not, it's time to kill that test - cut your losses and save your future maintenance time. </p>
+
+<p> If you want to find more of these, then it can be really useful to have your tests hooked up to analytics. Then you can set up a search to cluster tests that always fail together, alongside other metrics like your most flaky tests, or the tests that have never ever failed. </p>
+
+<p> Next time you're fixing some failures, ask yourself if one of these is a shadow test! </p>
+
+<p> As always, happy testing. </p>

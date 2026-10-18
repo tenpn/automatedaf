@@ -1,0 +1,48 @@
+---
+layout: post
+title: "Why does automation work?"
+date: 2026-07-27 18:07:31 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 194168277343143242
+---
+
+<p>There's an old adage that bugs cost 100x more to fix in production than in development. The actual numbers are <a href="/2025/08/21/this-graph-doesnt-exist-the-ghost-of-the-delayed-issue-effect/">probably folklore</a>, but the core of it rings true.</p>
+
+<h2>Why are old bugs expensive?</h2>
+
+<p>One of the biggest reasons is that if you're three months out from working on this system, you'll have to take some time to refamiliarise yourself. The fix could be one line, but it'll take you an hour to figure out what that one line is. If you had tackled this bug on the same day you created it, you may have been able to instantly identify the line.</p>
+
+<p>Even if you can get back in the headspace of the problem, the real fix could now be much more complicated. The system will have matured, and other systems will have grown up around it. What might have originally been changing the behaviour of one method used in one place, is now a much more complicated refactor. </p>
+
+<p>And that's only counting the cost of fixing - there's also a small-but-accumulating cost every day the bug lives in the codebase. People have to avoid or mitigate the bug in ways that rapidly add up. </p>
+
+<h2>Why doesn't everyone fix bugs early?</h2>
+
+<p>There's really only two reasons: The first is, that they don't want to. They know about the bug but they don't prioritise fixing. There's systemic reasons, especially in game dev, but if you have <em>any</em> agency over this, please re-read the paragraphs above and change your ways!</p>
+
+<p>The second reason, the one I can help with, is that they don't know about the bug yet. </p>
+
+<p>Maybe the team has limited testing resources: not enough testing hours for each milestone. </p>
+
+<p>It could be that the feature isn't super easy to test, requiring complex setup or precise input timings.</p>
+
+<p>Possibly the QA team didn't know to test the feature, because they didn't know it had changed. </p>
+
+<p>Finally, it could be that the bug manifests easily, but detecting it is hard. Imagine a UI bug that causes poor UX but could pass for as-designed.</p>
+
+<h2>Automation helps with all of this</h2>
+
+<p>If your testing resources are limited, why waste them on monotonous repetitive tests that machines can do just as well?</p>
+
+<p>Because programmers are <a href="https://thethreevirtues.com/">naturally impatient</a>, when they make automated tests they'll make them fast. No more long precise input sequences required.</p>
+
+<p>If communication is a problem, you should still solve that, but the QA team don't need to know that new tests shipped. They ship and they run.</p>
+
+<p>And lastly, automated tests don't deal in ambiguity. If the system is not working as designed, they'll fail. There'll be no manual interpretation to get wrong.</p>
+
+<p>So we can see the true purpose of automation is as a <em>tool for catching bugs faster</em>. </p>
+
+<p>Which we know now actually makes it <em>a tool for saving money and time</em>. </p>
+
+<p>Can you afford <em>not</em> to use test automation?</p>

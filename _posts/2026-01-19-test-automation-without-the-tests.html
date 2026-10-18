@@ -1,0 +1,28 @@
+---
+layout: post
+title: "Test Automation Without The Tests"
+date: 2026-01-19 10:26:46 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 177017408650741235
+---
+
+<p> I've been interested recently in the leap between "we've got a build server" and "we have test automation". </p>
+
+<p> People might be excited by the idea of the server testing the game for you, but put off by finding the right framework, or skilling up, or hiring the right skillset. </p>
+
+<p> Of course, <a href="https://automatedaf.dev">I can help with those problems</a>, but there are things you can do, using the tools you already know, to gain some of the safety of test automation <em>without</em> <em>writing any tests</em>. </p>
+
+<p> For instance, let's take shader errors in Unity. They're easy to do, especially when it comes to platform-specific code, and it <em>could</em> take QA a while to hunt down the single small purple triangle in a real build. And as we all know, the longer between bug creation and detection, the more expensive the fix is! </p>
+
+<p> Unity will continue to happily spit out a build if there's a shader error, but it <em>will</em> log the error to the console. Your build server could do a simple regex scan of the log, find the exact error, fail the build, and post it to slack. This takes no specific test framework or new skillset, and you're now able to catch shader errors earlier and fix them faster. </p>
+
+<p> There's many examples of this, not just log scanning but things like:<br /> - Turning on warnings as errors<br /> - Static analysis<br /> - A simple does-the-game-boot-without-errors smoketest </p>
+
+<p> You could even imagine tracking stats like build time, build size, asset import time, or individual asset size, and producing alerts directly from the build script if they pass some threshold. This isn't even that complicated - some lines of bash or powershell, a few bits of regex - but the range of issues and defects you can find through it is numerous. </p>
+
+<p> If you're having trouble getting the code team to commit to integrating the right automation SDK, maybe you can instead start doing some of these framework-less "tests", demonstrate the benefit over a few release cycles, and get some buy-in. </p>
+
+<p> We've been discussing ideas like this on the Automated Testing In Games discord this week, join us: <a href="https://discord.gg/kzWcY6ghAb">https://discord.gg/kzWcY6ghAb</a> </p>
+
+<p> Happy testing! </p>

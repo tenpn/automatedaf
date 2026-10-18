@@ -1,0 +1,36 @@
+---
+layout: post
+title: "How useful is running every test on every platform?"
+date: 2026-07-08 16:14:49 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 192440332715034322
+---
+
+<p>On the <a href="https://atig.dev">Automated Testing In Games discord</a> this week, our community question was about the utility of running automation on every platform in your project. What are the pros, and what are the cons? This post summarises that discussion.</p>
+
+<h2>Perf testing stands alone</h2>
+
+<p>As Phillip Smith from Frontier pointed out, this question requires putting aside performance automation. By its very nature, you want to be running that on real metal, so you get a sense for how your game is genuinely handling different stressful situations. This question is more about tests that are validating behaviour.<br /></p>
+
+<h2>Maximalism, with a cost </h2>
+
+<p>Daniel Vary (Haven Studios) and Keith Stockdale (Rare) really love the confidence you get from running everything everywhere, but see how this is a _lot_ of maintenance and expense for smaller studios. </p>
+
+<p>You need multiple kits provisioned and updated for each platform, and a way for your build servers to talk to them. This is easier in larger in-person studios, but can seem daunting for remote teams.</p>
+
+<h2>Humans have an important role</h2>
+
+<p>Phillip pointed out that most per-platform differentiators like controllers and input are best tested by human QA anyway, with their judgement and experience. </p>
+
+<p>His team focuses on core stability and making sure the game loads correctly, which corresponds with an example Daniel gave and is maybe a good baseline for everyone: can you get to the main menu without errors?</p>
+
+<p>If you can run just that test alone on all platforms, then you'll get a decent amount of coverage from it.</p>
+
+<h2>Analytics are vital for reduced-platform runs</h2>
+
+<p>My position was that analytics needs to be your driver here. For one recent client, I noticed that historically, they very rarely added a bug that would cause problems on one platform and not another. Almost every problem was cross-platform, so working with one platform at a time got them almost as much information as working with them all.</p>
+
+<p>I implemented a rotation system for them, so although they still did full runs on every platform multiple times a day, between those runs the system would focus only on one platform at a time. This was both faster and cheaper, and hasn't seemed to have any downsides yet.</p>
+
+<p>If you'd like to be involved in chat like this, join the discord! <a href="https://atig.dev/discord">https://atig.dev/discord</a></p>

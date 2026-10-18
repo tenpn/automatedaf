@@ -1,0 +1,48 @@
+---
+layout: post
+title: "Can We Use Unit Tests In Gameplay Code?"
+date: 2026-04-27 12:07:50 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 185828781045319219
+---
+
+<p>You may be familiar with unit tests: small, fast tests that aim to test one unique piece of <em>external behaviour</em>. A unit test for a container class may test that the count goes up by one after adding one item, for instance. </p>
+
+<p>Although they shouldn't be the only tests in a project, the wider tech industry would consider them an important foundation for test automation. They're also the lynchpin for techniques such as <a href="https://tidyfirst.substack.com/p/canon-tdd">test-driven development</a>. </p>
+
+<p>But in my experience, it's hard to use them in video games. Most projects attempting automation start with smoke tests or asset tests first. So why is that?</p>
+
+<h2>What's the "external behaviour" of gameplay code?</h2>
+
+<p>The external behaviour we're keen to unit test might look like "bullets are blocked by walls" or "holding run speeds up the player". </p>
+
+<p>The gameplay code itself might make calls to sound manager singletons, reach out to the HUD, or make physics raycasts. </p>
+
+<p>Any unit test attempting to test this gameplay code probably requires providing a fully working physics engine, or a HUD. </p>
+
+<p>The test would be extremely likely to depend on a live running game, which no longer makes it fast. </p>
+
+<p>If that's not enough, the test would also be just as likely to fail for changes in the external behaviour of the sound manager as for changes in the external behaviour of the gameplay code we're trying to test, and that's Very Bad.</p>
+
+<h2>Why is it bad to fail for the wrong external behaviour?</h2>
+
+<p>If a unit test called "holding run speeds up the player" fails, we'll naturally start looking around the player movement code for the reason why. However if the movement code calls the sound manager, and the <em>sound manager</em> is the place where the bug is, we've wasted time. </p>
+
+<p>This is called a <em>false positive</em> in testing terms: the test failed but the code under test was actually perfectly fine. In an ideal world, the sound manager tests would have failed, and only the sound manager tests. </p>
+
+<p>In fact, in the platonic ideal of a perfect unit testing library, any bug causes one and exactly one bug to fail, which instantly helps you zero in on the problem code. The more spurious false-positives you have around the real failing test, the longer it will take you to track the issue down. </p>
+
+<p>This is why it's so important for a unit test to isolate dependencies. There are many ways to isolate dependencies, but not many of them look like idiomatic gameplay code. This is where "testable code" gets its (unfair) reputation for turning codebases into a sea of interfaces.</p>
+
+<h2>Can we ever unit test gameplay code?</h2>
+
+<p>It's true that if the movement code took an ISoundManager reference, instead of accessing the sound manager through a singleton, it would be easier to test the movement code in isolation from sound code. I don't think all unit testable code has to devolve into a sea of interfaces and virtual function calls, but that's a piece for another post.</p>
+
+<p>There are codebases who use engines like Unity as a thin rendering layer, and handle all their logic internally. Those are sometimes more easy to unit test. </p>
+
+<p>Data-orientated systems like Entity Components Systems (Unity's DOTS is an ECS) are more testable by their nature, but is not an approach you can easily patch onto an existing project. </p>
+
+<h2>Is there any hope for testing external behaviour in gameplay?</h2>
+
+<p>Why yes - but we have to be somewhat more flexible about our definitions of unit tests. With that then comes some new best practices to help us make maintainable reliable gameplay tests. They're called Actor Tests, and we'll discuss them next week.</p>

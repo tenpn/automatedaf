@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,300,200");
+@import url("https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:700,400,300,200");
 
 /*
 	Halcyonic by HTML5 UP
@@ -1821,6 +1821,8 @@ section:last-child,
 }
 
 #content .post-content iframe.youtube-player {
+  display: block;
+  margin: 0 0 2em 0;
   width: 100%;
   height: auto;
   aspect-ratio: 16 / 9;
@@ -1852,6 +1854,16 @@ section:last-child,
   border: solid 1px #e2e6e8;
   border-radius: 3px;
   padding: 0.1em 0.35em;
+}
+
+#content .post-content strong,
+#content .post-content b {
+  font-weight: 700;
+}
+
+#content .post-content em,
+#content .post-content i {
+  font-style: italic;
 }
 
 #content .post-content ul,
@@ -2033,8 +2045,8 @@ section:last-child,
   color: #8250df;
 }
 #content .post-content .highlight .err {
-  color: #f6f8fa;
-  background-color: #82071e;
+  color: inherit;
+  background-color: transparent;
 }
 #content .post-content .highlight .c,
 #content .post-content .highlight .ch,

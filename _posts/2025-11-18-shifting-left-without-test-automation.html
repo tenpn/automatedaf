@@ -1,0 +1,28 @@
+---
+layout: post
+title: "Shifting left without test automation"
+date: 2025-11-18 08:11:43 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 171392635864351815
+---
+
+<p> Did you know about our Automated Testing In Games discord? We have a weekly discussion every week, and last week it was about how to "shift left" (that is, find out about bugs faster) in ways that don't involve test automation. If you missed out, here's a useful summary: </p>
+
+<p> - As soon as you can, get a build server running, the more platforms the better (dm me if you want help with that!) (Thanks <a href="https://www.linkedin.com/in/d20kadino/">Sean Sweeney</a>, <a href="https://www.linkedin.com/in/nicmakin/">Nic Makin</a>) </p>
+
+<p> <br /> - Dogfooding - have the team play the game regularly. But also dogfood your APIs - write the code that will call the API _before_ you write the API, so you know what the usage patterns will really look like. (<a href="https://www.linkedin.com/in/rafael-munoz-leon/">Rafael Muñoz León 🔜 Gamescom</a>) </p>
+
+<p> <br /> - The compiler is your 0th test, so turn on warnings-as-errors, and as many static analysis bells as whistles as you can (<a href="https://www.linkedin.com/in/keith-stockdale-4b8976120/">Keith Stockdale</a>, <a href="https://www.linkedin.com/in/darbotron/">Alex Darby</a>) </p>
+
+<p> <br /> - <a href="https://www.linkedin.com/in/darbotron/">Alex Darby</a> is, like me, a huge fan of defensive coding and asserts -- most languages asserts and document constraints. </p>
+
+<p> <br /> - I would add that maybe these count half as tests, but asking the editor to repeat its validation and failing on warnings - eg in unreal, running map check and asset validation, or in unity, opening every scene in the editor and watching for warnings in the console </p>
+
+<p> <br /> - Use retrospectives and pre/post mortems to understand friction and drive change, and customise them to your needs (<a href="https://www.linkedin.com/in/nepo/">Juan Antonio Nepormoseno Rosales</a>) </p>
+
+<p> <br /> - Having a maintenance budget rather than waiting for things to go on fire lets you slowly improve things and avoid falling into the Capability Trap (<a href="https://www.linkedin.com/in/rafael-munoz-leon/">Rafael Muñoz León 🔜 Gamescom</a>) </p>
+
+<p> <br /> - if you can afford it, get QA in early and embedded, smoking the build on a regular cadence. And push expected behaviour to them proactively (<a href="https://www.linkedin.com/in/nicmakin/">Nic Makin</a>, <a href="https://www.linkedin.com/in/colin-e-d-ferguson/">Colin Ferguson</a>)<br /> </p>
+
+<p> If you can think of more ways, <a href="https://discord.gg/kzWcY6ghAb">join us on the discord</a>! This week we're also talking about how to prioritise build engineering work. </p>

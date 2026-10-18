@@ -1,0 +1,36 @@
+---
+layout: post
+title: "Making it worse before it gets better"
+date: 2026-05-18 21:32:47 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 187840048841884673
+---
+
+<p>Tim Welch pointed out recently that software is interesting - 100% working is the goal, but the second best thing is <em>not</em> 99% working. 99% working is actually the worst case, because it might take you 100 attempts to find the bug. </p>
+
+<p>What you really want, if you can't have 100% working, is 0% working. That way you get to see the bug in its entirety, every single time. I've worked with some amazing QA over the years who I've felt confident throwing a 1 in 100 bug to, and know I'll get back stable repro steps after a long slog, but it can't be fun for them. </p>
+
+<p>We can make it easier for everyone by attempting to make the bug more obvious. For any given defect, there's almost always an assertion that could have fired earlier and more informatively, so let's see if we can discover that assert. Trace around various sites that might be a candidate, add assertions (UnityEngine.Assertions, or Unreal checks), and wait for the bug to appear during regular play. </p>
+
+<p>Maybe that assertion didn't get you all the way there, but it helped you make progress, and now you can do a second round of adding asserts, and keep tracing backwards to the source of the bug. </p>
+
+<p>Eventually, and probably with QA's help, you'll reach a point where your assertions are catching the real issue very quickly.</p>
+
+<p>Once the bug is fixed, these asserts can stay, and they'll be ammo for your smoke tests.</p>
+
+<p>I call this <em>Fail Early Fail Hard</em> - we're <em>not</em> trying to make the bug go away by being tolerant of failing conditions, we're trying to make it louder and harder to ignore so we can track it down and fix it properly. </p>
+
+<p>People sometimes worry that this approach leads to a buggy game. That it'd be better to wrap every possible exception in if(!=null), so that when the game launches, the players will have a smooth experience. </p>
+
+<p>This is a fallacy. </p>
+
+<p>If you try to suppress bugs, the frame is still unlikely to recover. You just won't find out until the null reference has percolated to some unrelated class four layers down a stack. </p>
+
+<p>(My favourite example of this is when I see people checking if a malloc returned a null value. My friend if the game is out of memory you are not going to recover from it in the middle of your pathfinding code!)</p>
+
+<p>Even worse is when suppressed bugs don't crash the game but limp along in a state this is <em>not quite enough broken</em> to prioritise fixing but still bad enough that it affects your playtests.</p>
+
+<p>Much much better to fail in a horrible and obvious way. The bug will be unignorable, it'll get fixed in development, and by the time you ship you'll have an incredibly stable game. </p>
+
+<p>It's a mindset shift to switch to this, but once you do it, you'll see the benefits very quickly. And you'll start looking for more ways to Fail Early Fail Hard, like turning on warnings-as-errors, and seeing how fast you can now iterate with the safety of knowing that bugs are obvious and loud. </p>

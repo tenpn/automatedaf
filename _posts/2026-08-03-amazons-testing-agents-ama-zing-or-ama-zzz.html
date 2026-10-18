@@ -1,0 +1,66 @@
+---
+layout: post
+title: "Amazon's testing agents: Ama-zing, or Ama-zzz?"
+date: 2026-08-03 19:50:46 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 194810692343170669
+---
+
+<p>Amazon released a whitepaper (<a href="https://aws.amazon.com/blogs/gametech/building-an-ai-game-testing-agent-with-amazon-bedrock/">https://aws.amazon.com/blogs/gametech/building-an-ai-game-testing-agent-with-amazon-bedrock/</a>) on using <a href="https://www.linkedin.com/company/alttester/">AltTester®</a>, Claude and a typically-overengineered AWS setup to run plain-language test cases against a video game. Here's how to evaluate experiments like this:</p>
+
+<p><em>Ability</em>: What can it do? Is it enabling people to do things they couldn't do before, or is it speeding up what they were already doing?</p>
+
+<p><em>Accountability</em>: When the tool goes wrong, who's responsible? Does it easily repeat the work? How easy is it to verify that it did what it said it did?</p>
+
+<p><em>Affordability</em>: The bubble hasn't burst yet. If something is expensive now, how much more will it cost when companies finally need to make a profit? Can you control what it does with your data? Can you run it on your infra?</p>
+
+<p><em>Alternatives</em>: Do tools and roles already exist to do this work? Is it a solution to a solved problem?</p>
+
+<p>How does this whitepaper measure up?</p>
+
+<h2>Abilities</h2>
+
+<p>This project claims to run human-language test cases on a mobile RPG. If this frees QA to do more exploratory testing, then wonderful. There are no details on what the tests were testing or how their presence affected the team.</p>
+
+<p>The most interesting thing this system enables is allowing non-automation engineers to script new tests in plain english. This will <em>potentially</em> allow an explosion of tests, but we'll discuss below if that's a scalable concept.</p>
+
+<h2>Accountability</h2>
+
+<p>The Accountability here is poor: there's an example of the output in the report, and it's merely Claude's summation of the state of the game each "turn" and the tool it's choosing to use next.</p>
+
+<p>If Claude is mistaken about the state or the tool choice, it's hard to tell from that output. Video output here seems a minimum requirement.</p>
+
+<p>This is a very important point: if you ship a bug that the LLM falsely claimed was working, you cannot sue Anthropic. The <em>final responsibility is yours</em>, so there must be an easy way to validate what the LLM tested and how.</p>
+
+<p>And you can't just watch it pass once, because tomorrow it might choose to take a different path! You have to check it often, at least every external release.</p>
+
+<p>With scripted test automation, you get that for free. If the tests pass, they did exactly what you asked, and will continue to do that forever.</p>
+
+<h2>Affordability</h2>
+
+<p>For 200 nightly tests, Amazon claims a monthly cost of $1660. At classic industry rates, that equates to 100+ hours of human QA a month, 5+ hours a day.</p>
+
+<p>This does not include development or maintenance costs. It also seems these are token costs alone, not infra. Without knowing more about the tests it's hard to compare exactly, but the system seems <em>about as efficient</em> as human QA.</p>
+
+<p>At scale, AWS mentions that costs might approach $3 per test, per month. As this system promises making it easy to add new tests (and there's no mention of how long the tests take to run), long-term costs would be something to keep a <em>close eye on</em>.</p>
+
+<h2>Alternatives</h2>
+
+<p>The AWS introduction compares the solution to frame-based input recording, which is far from industry best practice. They rightly point out that input recording generates a lot of test failures when the UI churns, requiring re-recording.</p>
+
+<p>Tools like AltTester indeed help make yourself immune to UI changes, but a good QA engineer will build tests that interact with gameplay state rather than UI.</p>
+
+<p>It's true this approach means you don't gain confidence around UI stability, but Amazon's solution is not verifying visuals in any way. The Attack button could be off-screen and alpha'd out and it would still be able to find it and click it.</p>
+
+<p>A good QA engineer (something <a href="https://automatedaf.dev">Automated AF</a> can help you with) is certainly more than $1660/mo, but remember that this solution does not include engineering and setup costs (and that Automated AF can provide short-term/fractional QA engineers).</p>
+
+<h2>Conclusions</h2>
+
+<p>This is not the final form of this approach, by far, but I think the above represents a good metric to evaluate future versions against.</p>
+
+<p>As things stand, if a project was looking to invest in automation, I'd say the <em>traditional approach of scripted automation still wins</em> on affordability and accountability.</p>
+
+<p>Once AWS's system is running, being able to add new tests quickly is extremely powerful. The team will see benefits in iteration speed, stability, and they'll start getting more value from their human QA budget. </p>
+
+<p>But does that matter if you can't tell if those test cases were correctly verified or not?</p>

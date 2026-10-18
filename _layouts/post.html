@@ -27,6 +27,11 @@ layout: default
             <p>This post was originally hosted on <a href="{{ page.original_url }}">andrewfray.wordpress.com</a></p>
           </footer>
           {% endif %}
+          {% if page.newsletter %}
+          <footer class="post-origin">
+            <p>This post was originally sent to subscribers of the <a href="https://automatedaf.dev/newsletter">Automated AF newsletter</a></p>
+          </footer>
+          {% endif %}
         </section>
       </div>
     </div>

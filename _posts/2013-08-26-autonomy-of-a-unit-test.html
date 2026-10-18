@@ -4,6 +4,7 @@ title: "Anatomy of a unit test"
 date: 2013-08-26 18:04:07 +0000
 categories: [Test Automation]
 original_url: https://andrewfray.wordpress.com/2013/08/26/autonomy-of-a-unit-test/
+excerpt: "In my spare time I maintain a unit testing library built for Unity3D. It’s called UnTest, it’s open-sourced under the MIT license, and you can download it here."
 ---
 
 <p>In my spare time I maintain a unit testing library built for Unity3D. It&#8217;s called UnTest, it&#8217;s open-sourced under the MIT license, and you can download it <a href="https://github.com/tenpn/untest">here</a>.</p>
@@ -24,7 +25,7 @@ original_url: https://andrewfray.wordpress.com/2013/08/26/autonomy-of-a-unit-tes
         Assert.IsEqualSequence(m_path, selectionThenAction);
     }
 {% endhighlight %}
-<p>To increase <strong>readability</strong>, the first thing to note is the context of the file you can&#8217;t see. It&#8217;s in a file called <em>SelectionNodeTests.cs</em>, so I instantly know this test applies to the SelectionNode class. There&#8217;s only one class in this file, with the same name, so there&#8217;s no chance of confusion.</p>
+<p>To increase <em>readability</em>, the first thing to note is the context of the file you can&#8217;t see. It&#8217;s in a file called <em>SelectionNodeTests.cs</em>, so I instantly know this test applies to the SelectionNode class. There&#8217;s only one class in this file, with the same name, so there&#8217;s no chance of confusion.</p>
 <p>The name of the function follows a consistent convention throughout the codebase: <em>FunctionUndertest_Context_ExpectedResult</em>. There are many naming conventions you could follow, this is the one I do. <em>Context</em> is how we set up the world before running the function. In this case, we&#8217;re adding a single action node to the selection node. <em>ExpectedResult</em> is how we want the function to behave; here we want the selection node and the action node to be added to the path.</p>
 <p>It&#8217;s not important how long the name of this function is, since it&#8217;s never called from anywhere. The more readable and informative you can make the function name, the easier it will be to figure out what went wrong when it fails.</p>
 <p>The unit test is split into three sections following the AAA pattern: Arrange, Act, Assert.</p>
@@ -51,7 +52,7 @@ original_url: https://andrewfray.wordpress.com/2013/08/26/autonomy-of-a-unit-tes
     Assert.IsEqualSequence(m_path, new ITreeNode[] { m_selNode, actionNode });
 {% endhighlight %}
 <p>The reason I keep it separate is to avoid &#8220;magic numbers&#8221;. It&#8217;s too easy to write code like, <em>Assert.IsEqual(result, 5)</em>. The writer may know what this 5 means, but it would be much better for future readers to put it in a named variable and write <em>Assert.IsEqual(result, hypotenuseLength)</em>.</p>
-<p>Now this test is as readable as possible, how did I make it <strong>maintainable</strong> too? You&#8217;ll notice that by improving readability I&#8217;ve gone some way to also helping maintainability, as something that&#8217;s easier to read is also easier to understand, and therefore is easier to maintain. But there are other things I do as well.</p>
+<p>Now this test is as readable as possible, how did I make it <em>maintainable</em> too? You&#8217;ll notice that by improving readability I&#8217;ve gone some way to also helping maintainability, as something that&#8217;s easier to read is also easier to understand, and therefore is easier to maintain. But there are other things I do as well.</p>
 <p>Check out the first line:</p>
 {% highlight csharp %}
     var actionNode = FakeAction.CreateStub();
@@ -62,7 +63,7 @@ original_url: https://andrewfray.wordpress.com/2013/08/26/autonomy-of-a-unit-tes
 <p>There&#8217;s a mocking framework behind that FakeAction.CreateStub() call, but since it&#8217;s such a common use case in this test suite I&#8217;ve wrapped it up in a helper function.</p>
 <p>Any mocking framework that works with mono will work with Unity3D. I use Moq. The latest version is <a href="https://www.nuget.org/packages/moq">here</a>. I&#8217;ve mirrored this in a unitypackage <a href="https://github.com/tenpn/moq-unitypackage">here</a> for easy importing to Unity.</p>
 <p>To further isolate myself from changes, I&#8217;m constructing the member variables <em>m_selNode</em> and <em>m_path</em> in a setup function (not shown). This function is run automatically before every test, and makes new SelectionNode and Path objects. This is not only handy, because they&#8217;re used in every test in the class, but also isolates the unit tests from changes to the constructor signatures. Other commonly-used functions can also be hidden behind helper functions, but it&#8217;s best not to hide your function-under-test for readability reasons.</p>
-<p>The final thing I need to do is make the test <strong>&#8220;trustworthy&#8221;</strong>.</p>
+<p>The final thing I need to do is make the test <em>&#8220;trustworthy&#8221;</em>.</p>
 <p>By going through the maintainable and readable steps, I&#8217;ve made sure this test depends on the minimum amount of game code. When this test fails, hopefully it will only be because the function under test, UpdatePath(), had an error.</p>
 <p>The more game code you depend on, the closer your test slips along the spectrum from unit to integration test. Integration tests check how systems connect together, rather than single assumptions. They have their place in a testing plan, but here I&#8217;m trying to write a unit test. A great rule of thumb is that a single line of buggy code should cause failures in the minimum of unit tests, and ideally only one. If lots fail, that&#8217;s because the code isn&#8217;t isolated properly and you&#8217;ve ended up with some integration tests.</p>
 <p>Some of my early unit tests, from F1 2011, created a whole world for the AI to move in and recorded the results, rather than mocking surrounding code like we have here. The end result was that a single bug in the world code could cause many many tests to fail. That makes it hard to track down the root cause of the bug, and meant I had probably written integration tests instead of unit tests.</p>

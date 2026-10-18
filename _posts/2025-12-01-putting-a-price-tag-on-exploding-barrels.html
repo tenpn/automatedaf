@@ -1,0 +1,32 @@
+---
+layout: post
+title: "Putting a price tag on exploding barrels"
+date: 2025-12-01 19:20:48 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 172612317705405834
+---
+
+<p> I've talked before about <a href="/2025/05/26/exploding-barrels-and-why-your-first-test-should-be-an-asset-test/">Exploding Barrels</a> on this blog. It's one of my favourite examples of a real-life test that was easy to implement and saved everyone involved some time. </p>
+
+<p> But what I've never done is put a price tag on that test. </p>
+
+<p> You should check out the link above, but as a quick recap: </p>
+
+<p> - QA spot that a single barrel on one single level won't explode when shot<br /> - A coder figures out it's just a wrong physics layer, a super easy and safe fix <br /> - ah but QA are now adding "explode every barrel" to a pre-release checklist<br /> - the coder spends 5min adding a "is every barrel on the right layer" automated test, QA can relax again </p>
+
+<p> It may <em>feel</em> valuable to write that test, but can we actually work out if it was a good investment? Unless you're Valve or Team Cherry (if you are, I'm open to blog sponsorships!) you've got to make decisions about where to invest your money, and it's good to check your gut feel every now and again. </p>
+
+<p> So let's assume QA are paid a relatively-cheap $15/hr, and exploding every barrel through the whole game would take 3 hours. We can therefore say this test saved $45. </p>
+
+<p> I said it took the coder 5min to add the test, but let's say it's 10 anyway. To break even, the coder would have to be paid no more than $270/hr. If they were paid more than that, it would be economically smarter to forego the test and just throw QA bodies at the problem. </p>
+
+<p> 270 is a lot! I promise you I don't <a href="https://automatedaf.dev/">charge my clients</a> $270/hr. But that's not the end of the story. </p>
+
+<p> If there's multiple releases to come on this project, even if they're just internal milestones, the value goes up. If we were to do just 3 more releases, and therefore 3 more barrel explosion checklists, you'd suddenly need a programmer paid $1,518,750 a year before it made sense not to write the test. </p>
+
+<p> And at that point surely you can afford someone (maybe me, at $270/hr) to write the test for you. </p>
+
+<p> It's true, not every test is ten minutes to write, but we haven't even talked about the harder-to-quantify economic benefits, like faster bugfixing, earlier playtesting, and more focused valuable manual QA. </p>
+
+<p> I think it's safe to say that if you empower your coders to add focused asset tests to your project, and you'll see boundless benefits very quickly. </p>

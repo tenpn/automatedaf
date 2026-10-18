@@ -1,0 +1,42 @@
+---
+layout: post
+title: "A simple branching strategy for small teams"
+date: 2025-11-10 19:35:47 +0000
+categories: [Build Engineering]
+newsletter: true
+newsletter_id: 170710367780997094
+---
+
+<p> Let's talk about a simple branching strategy and build pipeline for small to medium-sized teams. </p>
+
+<p> There's nothing revolutionary here, but I wanted to put it all in one place. I've seen this setup work for teams from game teams of up to 30. If you're big enough to have an embedded QA, even if they're fractional, this is where I think you should start. </p>
+
+<p> First, we'll let everyone push to main all the time (<a href="https://www.linkedin.com/posts/andrew-fray-9992572_at-least-in-smallmedium-gamedev-teams-activity-7388534699272556544-D9fP/">https://www.linkedin.com/posts/andrew-fray-9992572_at-least-...)</a> -- this has way less overhead and mental load for a small team than any other approach. </p>
+
+<p> <em>Daily</em> </p>
+
+<p> <em></em>The build server cooks two builds a day, one at night, and an optional one at lunchtime for busier teams. The team should come in to a new build at least every morning. </p>
+
+<p> That build goes to a "latest" branch on steam, where your QA will take it and run daily smoke tests. If they pass, QA promotes the build to the "team" branch. </p>
+
+<p> (Over time, it's a great idea to talk to your QA, and identify repetitive tasks from the smoke tests that you can turn into automation. There should always be a human in the loop here but you should aim to make the smoke as quick and as painless as possible) </p>
+
+<p> If there's an issue in the build and QA can't approve it, they raise it with the team who drop everything to get it fixed. Despite the context switching this may involve, it's better in the long run for everyone to fix bugs fast and keep the build playable. (<a href="https://www.linkedin.com/posts/andrew-fray-9992572_a-broken-build-is-everyones-problem-until-activity-7381972421769322496-gCk_/">https://www.linkedin.com/posts/andrew-fray-9992572_a-broken-...</a>) </p>
+
+<p> Encourage QA to be judicious here! I'd recommend "is the build at least as playable as yesterday" as a great rule of thumb. </p>
+
+<p> At any time the team can jump on steam and play a build that both the server and QA have checked is at least playable. If you have urgent changes you want to see in a build, you can still trigger a "latest" build at any point, it just won't go to the whole team by default. </p>
+
+<p> <em>Releases</em> </p>
+
+<p> As the end of a release cycle approaches, choose a moment with the team to act as the cutoff. At that point, branch off from main with a new branch called "release", and ask the build server to start regularly cooking that branch and pushing it to a release-candidate steam branch. </p>
+
+<p> Work can continue on main without any locking and the team continues straight on to the next release. Any last-minute work can be completed either in main and cherry-picked across or done directly in the RC branch. I've seen too many teams lock main for releases, and I don't get why! </p>
+
+<p> Once the release candidate has gone through a more thorough testing cycle with QA, the build can be set public on steam and a label or tag applied in source control to mark the commit the build was made from. </p>
+
+<p> Post-release hotfixes carry on in the release branch, but will need manual merging back to main. Eventually this branch is nuked so it can be recreated for the next release, leaving only the source control tag </p>
+
+<p> <em>Wrapping Up</em> </p>
+
+<p> This strategy has minimal overhead for the team but still keeps them moving and productive. But you shouldn't set it in stone! Try it, see where it works for you and where it doesn't, then slowly adjust over time. </p>

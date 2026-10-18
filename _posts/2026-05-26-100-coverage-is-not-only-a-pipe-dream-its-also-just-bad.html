@@ -1,0 +1,38 @@
+---
+layout: post
+title: "100% coverage is not only a pipe dream, it's also just bad"
+date: 2026-05-26 13:46:48 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 188536791416964523
+---
+
+<p>Last week I saw someone excited that AI agents will let them hit 100% test coverage. </p>
+
+<p>Friend, stop. Put down the tokens.</p>
+
+<p>Just because you can do something easily now doesn't mean that you should. </p>
+
+<p>This is your gamedev project on 100% coverage:</p>
+
+<ul><li>Tests take hours and hours to run</li><li>95% of them never fail</li><li>Every change comes with a fat wad of test diffs to review, slowing everything down</li><li>Designers need to update tests when doing balancing changes</li><li>The important behaviour of a system is swamped by tests checking that public int HealthPoints { get {} } returns m_healthPoints. </li></ul>
+
+<p><em>"Ah but the agent is going to take care of all of this for me, and More Context is good right?"</em></p>
+
+<p>First of all, more context is not a universal good. The agent has to do a lot of work to search to find the useful needle in the haystack. A 1m token allowance does not mean it's a good idea to use 1m tokens. It'll be slower and more error-prone.</p>
+
+<p>Second of all, agents code the way we code, which means they're reading code and tests and generating diffs. If you've got excessive coverage, you'll be burning more tokens than you need to. Maybe that's cheap now, but it won't always be!</p>
+
+<p>(Also, out-of-the-box, agents like Claude love to write poor self-referential tests but that's another topic)</p>
+
+<p>So what's Good Coverage? I like to think of a house: we'll cover the foundations and the load-bearing pillars, but the ceiling and the walls we'll leave alone. </p>
+
+<p>The foundation is any code that's widely used -- libraries, core functions, etc. They're unlikely to change but a problem here could manifest anywhere.</p>
+
+<p>The pillars are the player-facing feature that are critically important to the team. You don't want your player physics code to break, nor the IAP flow.</p>
+
+<p>The walls and the ceiling are everything else - visual features that are hard to write test automation for, less important systems, or things that are on the golden path anyway. For instance I often don't test tutorials too much, you'll be seeing a _lot_ of your tutorial. </p>
+
+<p>The one exception to this metaphor is a less important feature that's hard to test manually - there can be value to doing that with automation. Although there can also be value in adding cheats to make them easy to test manually!</p>
+
+<p>I think it's so much easier to use agents to do things you couldn't do before, rather than do more of the things you were already doing. Stop chasing 100% coverage and focus on useful tests instead.</p>

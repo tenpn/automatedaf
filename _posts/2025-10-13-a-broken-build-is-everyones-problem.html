@@ -1,0 +1,12 @@
+---
+layout: post
+title: "A broken build is everyone's problem"
+date: 2025-10-13 20:15:53 +0000
+categories: [Culture And Process]
+newsletter: true
+newsletter_id: 168176653222020555
+---
+
+<p> This week I want you to remember a simple creed: <em>A broken build is everyone's problem until it's someone's problem.</em><br /> </p>
+
+<p> Getting a build server up and running is half the battle - embedding it into your culture is sometimes just as hard.<br /> <br /> It's too easy for the build to be failing and no-one paying attention, or everyone assuming it's someone else's problem, and nothing gets fixed for days.<br /> <br /> Shelving/queuing approaches are great for identifying who's responsible for fixing, but not every studio has them, and they can be slow.<br /> <br /> Instead, for &lt;50 person teams, I prefer a work-on-main approach. Go wild! But the second the build breaks, we adopt a collective responsibility:<br /> <br /> Anyone in the team, to the newest junior programmer (remember when they existed?), who sees a broken build notification should jump in and get to the root cause. <em>Don't assume it's someone else's problem because you haven't pushed recently.</em><br /> <br /> Over-communicate, especially on remote teams. Say you're looking into it as soon as you start. Tag someone for support if you get stuck.<br /> <br /> Find who it is - it might not even be someone who's pushed, maybe the server is out of memory or a test needs updating or or or - and tag them. Until you get a response, it's still your responsibility.<br /> <br /> And be kind! Remember <em>the build server is helping us</em> by identifying an issue, don't ridicule or shame the person who triggered the failure.<br /> <br /> If necessary, help the responsible developer figure out how to fix the problem, and see if there's learning opportunities to avoid the same thing happening again. Someone should be posting ETAs in slack.<br /> <br /> As soon as the build is fixed, post the fixed commit number, and (if a scheduled build was halted) retrigger it. Keep an eye on the next build.<br /> <br /> Afterwards, take a step back. Were there ways the build server could have surfaced the problem more easily? Could have caught it faster? Note those for future work.<br /> <br /> With this collective responsibility approach, builds are fixed rapidly, the build processes slowly improves and people aren't left in the dark wondering what's happening or who's dealing with it.<br /> </p>

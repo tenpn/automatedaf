@@ -1,0 +1,65 @@
+---
+layout: post
+title: "Sending Jenkins Build Stats To Grafana"
+date: 2025-12-08 13:37:45 +0000
+image: /images/blog/2025/12/grafana-jenkins-build-stats-dashboard.png
+image_fit: contain
+categories: [Build Engineering]
+newsletter: true
+newsletter_id: 173223666949031448
+---
+
+<p> You may know I'm a tests guy first, but I'm finding in my <a href="https://automatedaf.dev">consulting role</a> that a lot of smaller studios really value some help with their build servers too. I've done this a bunch before in my career, mostly with Jenkins, but one thing i haven't touched much is long-term analytics. </p>
+
+<figure><img src="/images/blog/2025/12/grafana-jenkins-build-stats-dashboard.png" alt="A Grafana dashboard with time-series graphs of build size, build duration per workflow and perf results, plus CPU usage and disk space panels for the build machine" /></figure>
+
+<p> Long-term time-series data like this can be incredibly useful for keeping an eye on the health of a build outside of pass/fail tests. For instance, you could see how build size grew over time, or perf changed, or build duration lengthened. If there's a sudden jump, or if it passes a threshold, you can dig in and find the change that caused it. </p>
+
+<p> I've been looking at Grafana as a solution for this - there's cloud hosting to get started quickly, but you can also self-host for free. I thought in today's post, I'd talk a bit about how I'm interfacing Jenkins with Grafana. This might not be the best practice, I'm still learning! Reach out if you think I'm making a mistake. </p>
+
+<p> After setting up a free grafana account, I followed the steps to set up basic windows monitoring. That walks you through installing Alloy, which is a client that scrapes the local machine for data. There's a plugin for Jenkins to automatically start sending it some data, although I didn't find that especially useful. </p>
+
+<p> To get custom data from my jobs to Alloy, such as build size, i used the <a href="https://grafana.com/docs/alloy/latest/reference/components/prometheus/prometheus.exporter.windows/#textfile">textfile collector</a>. This asks Alloy to watch a folder, and scrape any .prom files it sees for new data. </p>
+
+<p> My Jenkins approach is to have one big uberjob with a parameter that sets a workflow - is this a fast check, or a deep check, or a deploy? This workflow flag turns on or off various stages. I added a groovy script that created a file and filled it with useful info: </p>
+
+{% highlight prometheus %}
+# HELP job_info metadata about the job
+# TYPE job_info gauge
+job_info{job_name="Proj-123-Deep", changeset="123", job="Proj", branch="main", workflow="Deep"} 1
+
+# TYPE job_duration_ms gauge
+job_duration_ms{job="Proj", branch="main", workflow="Deep"} 123456
+
+# TYPE job_buildsize_bytes gauge
+job_buildsize_bytes{job="Proj", branch="main", workflow="Deep"} 123456789
+{% endhighlight %}
+
+<p> I'd have one of these files per workflow, so something like job-deep.prom, job-deploy.prom. This way I know Alloy has enough time to scrape them before they're updated. (it's scraping every 60s so that shouldn't be a worry anyway, but...) </p>
+
+<p> "Gauge" here is any stat which might go up and down. There's also "counter" for monotonically-increasing stats like total number of builds. </p>
+
+<p> The {} around the stats are "labels", and they're really useful for grouping, but it's important you don't have discontinuous data there, like commit or job name. If you do, Grafana will not cope well when trying to graph this data. I included the _info stat as a place to put this stuff, which seems to be a best practice, but I haven't fully figured out how to use it for annotations yet. </p>
+
+<p> ⚠️ One important detail to note about this setup is that Alloy really wants you to atomically update the files, to avoid issues if it starts scraping while you're updating. I create these as temp files, then do a copy to push them to the destination. </p>
+
+<p> To make Alloy do the scraping, I updated the config.alloy file as below: </p>
+
+{% highlight hcl %}
+prometheus.exporter.windows "jenkins_textfiles" {
+  enabled_collectors = ["textfile"]
+  textfile {
+    directories = ["C:/path/to/some/common/folder"]
+  }
+}
+prometheus.scrape "jenkins_textfiles" {
+  targets = prometheus.exporter.windows.jenkins_textfiles.targets
+  forward_to = [prometheus.remote_write.metrics_service.receiver]
+}
+{% endhighlight %}
+
+<p> ...I'll admit this config is a little bit of a black box to me, and the textfile collector docs aren't fantastic, but this works and I don't think I have to touch it again. </p>
+
+<p> There's more to talk about, especially in grafana graph/dashboard design, but I like this approach on the jenkins machine. It means groovy doesn't need any API keys or libraries, only to write to a file, and Alloy can pick it up. </p>
+
+<p> Happy testing! </p>

@@ -1,0 +1,32 @@
+---
+layout: post
+title: "Asset Tests With Spec In Unreal 5"
+date: 2026-02-16 09:45:59 +0000
+image: /images/blog/2026/02/unreal-spec-static-mesh-navigation-asset-test-code.png
+image_fit: contain
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 179551845565334833
+---
+
+<p> Here's a quick example of using Spec in Unreal 5 to make Asset Tests: </p>
+
+<p> Let's say we have a folder of our unreal project that contains meshes for prototyping a level layout. We want those meshes to always have navmesh data, so agents can pathfind around them. </p>
+
+<p> This is an awkward thing for QA to test, because it requires either specialist tools or tediously kiting enemies around each unique asset instance in a level. </p>
+
+<p> It's trivial for a computer to validate this data, but we don't know ahead of time what the assets are called! We only know they live in a specific project folder. </p>
+
+<p> We can use Spec <a href="https://dev.epicgames.com/documentation/en-us/unreal-engine/automation-spec-in-unreal-engine">https://dev.epicgames.com/documentation/en-us/unreal-engine/...</a>, part of Unreal's Automation Framework, to iterate all the assets and make one test suite <em>per asset</em>. When an asset is missing nav data, we'll get a specific actionable test failure, allowing us to fix the problem quickly. </p>
+
+<figure><img src="/images/blog/2026/02/unreal-spec-static-mesh-navigation-asset-test-code.png" alt="C++ code in an IDE defining an Unreal automation Spec that queries the Asset Registry for static meshes in /Game/LevelPrototyping/Meshes, then loops over them calling Describe() and It(&quot;Has navigation data&quot;) for each one" /></figure>
+
+<figure><img src="/images/blog/2026/02/unreal-session-frontend-automation-static-mesh-asset-tests.png" alt="Unreal's Automation tab listing the generated LevelPrototyping StaticMeshes tests, one per mesh such as SM_ChamferCube, SM_Cube and SM_Ramp, each with a passing &quot;Has navigation data&quot; test" /></figure>
+
+<p> The magic is happening on lines 18-20, where we for-loop through some assets and <em>then</em> call Describe(), which starts a new test suite. You can even nest these, having Describes() inside Describes() inside Describes(). </p>
+
+<p> The wonderful thing is, this happens at editor boot, so the CI server can see new assets the moment they are committed. A whole class of bug will no longer make it to QA builds. No need to wait for a programmer to manually update a list. </p>
+
+<p> Happy testing! </p>
+
+<p> PS the Automated Testing In Games community I run finally has a website! Find resources and a discord link at <a href="https://atig.dev">https://atig.dev</a> </p>

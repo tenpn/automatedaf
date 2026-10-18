@@ -1,0 +1,44 @@
+---
+layout: post
+title: "What do unreliable tests look like?"
+date: 2026-06-08 18:56:47 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 189732452408755237
+---
+
+<p>An unreliable test means a team is more likely to ignore the output, or just turn the test off entirely. While deleting tests that have poor ROI is healthy, if it becomes an epidemic of deletions, the build quality will start to suffer.</p>
+
+<p>And once the team is under pressure from a poor quality build, they'll not have the time to rebuild some healthy automated tests!</p>
+
+<p>So identifying unreliable tests early is a really important skill. But what does an unreliable test look like?</p>
+
+<h2>⌚Too slow</h2>
+
+<p>A test that takes too long to run is going to run less. That might mean a lower cadence, so it's harder to tell which change broke the test, or in the worst case scenario, it might mean only run on a voluntary basis!<br /><br />Beyond the obvious solutions, you might consider running different subsets of tests depending on the changes the build server will be running against, although this can be fraught. Always have a fallback where it runs all tests as often as is reasonable!</p>
+
+<h2>🙊Doesn't fail when the code under test is broken</h2>
+
+<p>If a test fails, but on investigation everything is working fine, the team will quickly lose patience. This is a "false negative".<br /><br />Always make sure, when writing a new test, that you see it fail before you commit it. It's so easy to typo an equality operator! And beware tests that test infra instead of logic - Claude is particularly good at making a mock that passes the test.</p>
+
+<h2>🐘Fails for spurious reasons</h2>
+
+<p>If a failing test is claiming to test system A, but the bug causing it to fail is really in system B, you've got a false positive failure. These are toxic - you'll have more failure spam than necessary, and it'll take more time to identify which test is actually the root cause.<br /><br />Except for when you're dealing with end-to-end tests, try to isolate the context of your tests from each other. This is easier said than done in gamedev - unity or unreal code just needs gameobjects and actors, and they need a unity runtime - but make best efforts. A little bit of dependency inversion goes a long way!</p>
+
+<h2>🧮Doesn't give actionable information</h2>
+
+<p>"Something broke" means a test failure is greeted with a sigh. It'll mean digging through logs, searching for keywords, and re-running tests locally to isolate the true problem.<br /><br />An actionable test starts with an informative test name - GIVEN_WHEN_THEN is my favourite, and don't forget to be explicit about the assertion. "ResultValid" is less informative than "ResultNotEmptyString". <br /><br />Use things like Build Failure Analyzer on Jenkins or Failure Conditions on Teamcity to surface appropriate errors as frictionlessly as possible.</p>
+
+<h2>🥐Too flaky</h2>
+
+<p>"Just run it again, that one always fails". You're taking multiples of time longer to realise there's a problem, even when the signals are there. You're shipping failing tests because "it's probably fine". <br /><br />Failing tests are one of the biggest challenges with live automation. Non-determinism in gameplay code is a killer, but beyond that there are some key things to keep in mind.</p>
+
+<p>Watch for dependencies between your tests - most systems don't offer deterministic ordering. That means if your test accidentally depends on state set up by a previous test, it could fail sometimes and pass other times. </p>
+
+<p>This state could be in the form of warm caches, where an early test populates data that a later test consumes. Or it could be poor teardown, leaving the game in a bad state for future tests. </p>
+
+<p>Framerate dependency is very common in runtime tests too. Your build server is probably very rubbish! Unity's Time.captureFramerate is very useful here for making the tests behave consistently across different specs.</p>
+
+<p>Finally, floating point calculations need careful bounding. Try to avoid just upping the error bars until the tests pass consistently: look at the calculations and try to estimate what a reasonable error would look like.</p>
+
+<p>What types of unreliable test did I miss? Come and tell me on the Automated Testing In Games discord: <a href="https://atig.dev">https://atig.dev</a></p>

@@ -1,0 +1,28 @@
+---
+layout: post
+title: "Do Passing Tests Provide Any Value?"
+date: 2026-03-23 18:06:11 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 182753334298413002
+---
+
+<p> One of the questions at the GDC automated testing roundtables this month was about judging the value of tests, and I mentioned that <em>a test that never fails has no value</em>. Afterwards some people said they found that surprising, so I thought I'd go into more details here. </p>
+
+<p> Imagine two projects, one where tests are constantly (and accurately) failing, and one where tests are green 100% of the time. </p>
+
+<p> In both projects you're spending time writing and maintaining tests, the build server is burning CPU cycles executing tests, and we can assume you're still creating bugs. </p>
+
+<p> However in one of those project, all those bugs are being found by QA, while in the other, the build server is informing you quickly with actionable feedback. I know which project I'd rather be working on. </p>
+
+<p> It's clear that a failing test provides way more value to the team than a passing test. The former is informative and instantly actionable, while the latter doesn't really tell you much and not in an actionable way. It could be that the project is bug-free, or it could be that you've written the wrong tests. </p>
+
+<p> Consider at the same time that budgets are limited, and we have only so many keystrokes (or I should probably start saying tokens) in the budget. </p>
+
+<p> It's pretty clear then that you should prioritise the tests you write, and you should give almost infinitely more value to the tests you believe will fail at least once. </p>
+
+<p> One great way of doing that is regression tests: every time you fix a bug, commit a test that exercises the bug along with it. Since it already broke once, you have a plausible reason to think it will fail again, and the test will get a chance to provide value. </p>
+
+<p> Think about this next time you're writing a test: do you have a plausible reason to believe this might fail before the end of the project? Is it the most valuable test you could be writing right now? Is it the best way to be spending your keystrokes? </p>
+
+<p> As always, happy testing. </p>

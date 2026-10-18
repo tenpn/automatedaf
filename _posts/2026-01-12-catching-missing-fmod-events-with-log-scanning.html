@@ -1,0 +1,26 @@
+---
+layout: post
+title: "Catching Missing FMOD Events With Log Scanning"
+date: 2026-01-12 12:10:44 +0000
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 176390187948967792
+---
+
+<p> There are all sorts of reasons why it might be hard to get test automation set up on your build server - maybe the tech team don't have time to integrate a plugin or set up any hooks, maybe you don't have the resources to write many tests - but there's still some useful things you can get done. </p>
+
+<p> Lots of teams use FMOD with Unity now, since their licensing is quite nice for smaller teams. But if you rename or accidentally delete an FMOD event, Unity will still produce a build, it just won't play a sound. While the sound designer might spot the problem instantly, you can imagine, especially if it's a subtle sound effect, that it could hang around in a build for a while. </p>
+
+<p> While the build still gets produced, the log will contain a line about the problem - it'll mention "invalid event reference in field" along with the problem object. What if we could just scan the log and fail the build if we saw it? </p>
+
+<p> We can do this with just a simple python or shell one-liner, or we can use a plugin like <a href="https://plugins.jenkins.io/text-finder/">Text Finder for Jenkins</a>, but we didn't need hooks in the game and we didn't need plugins integrated into source code. </p>
+
+<p> In fact, there's a bunch of interesting things you can easily add to a "log scanner" setup like this: </p>
+
+<p> - "Main Object Name X does not match filename"<br /> - Shader errors, which don't normally fail a build<br /> - "Missing or no valid script attached" warnings from deleted/renamed monobehaviours<br /> - Mecanim ignored transitions, from code or debug changes </p>
+
+<p> These are all minor issues that could have large player-facing effects, and they're all super cheap to fix if you catch them early. A project that doesn't let these warnings reach a build can avoid suffering whole families of bugs! </p>
+
+<p> Have a look at your recent builds today, and see if you can spot log entries that you could elevate into errors using log scanning. </p>
+
+<p> Happy testing! </p>

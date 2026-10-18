@@ -1,0 +1,66 @@
+---
+layout: post
+title: "Actor Tests: Unit Tests In Gameplay"
+date: 2026-05-04 18:44:49 +0000
+image: /images/blog/2026/05/actor-test-kart-and-checkpoint-arch.png
+categories: [Test Automation]
+newsletter: true
+newsletter_id: 186556961668466501
+---
+
+<p><a href="/2026/04/27/can-we-use-unit-tests-in-gameplay-code/">Last week</a> we talked about how unit tests aren't
+    really suitable to gameplay testing. They can't execute quickly and they depend on so much external behaviour that
+    they become unreliable.</p>
+
+<p>There is a hope though, and that's Actor Tests. First popularised by <a
+        href="https://www.youtube.com/watch?v=KmaGxprTUfI">Sea Of Thieves</a>, they are best described as "best effort"
+    unit tests - they almost certainly involve a runtime client, and they involve some level of unavoidable
+    dependencies.</p>
+
+<h2>Wait so it's just unit tests but we go lalala with our fingers in our ears?</h2>
+
+<p>To some extent, I guess?</p>
+
+<p>Except by giving them a clear name, we avoid the confusion of discussing a test suite that claims to be "unit" but
+    very much does not meet the gold standard.</p>
+
+<p>We can also start discussing best practices for actor tests in isolation from unit tests.</p>
+
+<h2>What are these actor test best practices?</h2>
+
+<p>For one, just because actor tests are not unit tests, does not mean we have carte blanche to use as many dependencies
+    as we want. </p>
+
+<p>We vow to make best efforts - that means things like isolating the gameplay under test in its own test level, and
+    using dependency inversion and other good decoupling techniques to reduce dependencies <em>where possible. </em></p>
+
+<p>In my workshops on test automation (<a
+        href="https://automatedaf.dev/workshops">https://automatedaf.dev/workshops</a>) we go through an example where
+    we need to drive a car through a checkpoint to exercise a bug.</p>
+
+<figure><img src="/images/blog/2026/05/actor-test-kart-and-checkpoint-arch.png"
+        alt="A cartoon character in a red go-kart on a flat grid floor, facing a large purple arch that marks a checkpoint" />
+</figure>
+
+<p>A basic actor test might just spawn a checkpoint and a car and drive through it. However even if this is in an
+    isolated level, we still have dependencies on input, physics, and in our example we can only see if things are
+    broken by checking if the Time Manager has boosted the time remaining. The test technically works, but takes over
+    five seconds to run.</p>
+
+<p>We can do better than this. Since we know the checkpoint uses OnTriggerEnter to find the car, we can actually take
+    simply a cube on the right layer, and teleport it to the checkpoint. </p>
+
+<p>We've instantly lost dependencies on input and the kart system. This test will no longer fail if for instance the
+    kart acceleration code breaks, which makes it more trustworthy and reliable. </p>
+
+<p>We can continue doing this, and in the workshop get down to a test
+    that has no dependency on the physics system or the time manager, and executes very quickly.</p>
+
+<h2>What are actor tests poorly suited to?</h2>
+
+<p>They've got very similar weaknesses to unit tests - they validate external behaviour of systems, but not how systems
+    talk to each other, and there can be aspects of the player experience which they can't capture. They are an
+    important tool in your box, but rely on other test types like smoke tests and asset tests, and human QA remains a
+    vital last step in the pipeline. </p>
+
+<p>But once QA get their hands on the build, they'll have confidence the checkpoints are working correctly.</p>

@@ -1,0 +1,26 @@
+---
+layout: post
+title: "When The Build Fails, REACT"
+date: 2025-12-15 22:05:47 +0000
+categories: [Culture And Process]
+newsletter: true
+newsletter_id: 173867532965381327
+---
+
+<p> When you're dealing with a failed build, R.E.A.C.T. quickly!<br /> </p>
+
+<p> So in my <a href="https://automatedaf.dev/workshops">workshops</a> on test automation, we talk about build failures, and I've got some clear opinions on how to handle them. Now I've taken the time to turn them into a nice acronym - let me know what you think!<br /> </p>
+
+<p><em>Respond Immediately</em>: there’s very few things as important as a build failure. The longer it lasts, the more chance it’ll impact the team’s work, and the more chance someone will push a new failure on top of the first one. Drop everything. But who should drop everything?<br /></p>
+
+<p><em>Everyone’s Responsibility</em>: because a build failure could have such a big impact on the team, if you spot one and it’s not being dealt with, then you’re the one to deal with it. This is true even if you are sure it’s nothing to do with you!<br /></p>
+
+<p><em>Amnesty</em>: the build server is doing us a favour by failing, that’s why we set it up. We know everyone makes mistakes, and there’s no shame in being the person this time who pushed a failure. If you’ve dived into a failure and can identify the best person to address it, you can pass the fix off to them, but it’s not a blame game or a pointing of fingers. We’re interested in fixing the build, not the person. (Repeated common mistakes might be an issue for a line manager to bring up, in private)<br /></p>
+
+<p><em>Clarify</em>: Sometimes your build server can do a good job hiding the failure, and you’ll have to dig around in the logs. If that’s the case, surface your work for others, and save them the time. Make a note of this failure and figure out a way to make it more visible next time (maybe through eg extending failure cause management in Jenkins).<br /></p>
+
+<p><em>Talk Loudly</em>: Someone stopping by the builds channel and seeing the failure should be able to quickly summarise how the fix is going and an ETA on the build going green. That means overcommunicating! Post that you’re investigating, post the problem, post the ETA on the fix, post when the next build is expected to go green, etc. This will save wasted effort from two people investigating the same problem and keep the team informed.<br /></p>
+
+<p> Next time the build goes red, make sure you REACT! </p>
+
+<p> Happy testing! </p>

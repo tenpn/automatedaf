@@ -12,11 +12,11 @@ original_url: https://andrewfray.wordpress.com/2020/12/28/building-unity-using-j
 
 
 
-<p class="wp-block-paragraph">In this post I&#8217;ll outline how I set up <a href="https://www.jenkins.io/">Jenkins</a> to make reliable repeatable Unity builds, using a pipelines script (also called a jenkinsfile) that&#8217;s stored inside source control. I&#8217;ll outline the plugins I used and the reasons behind some of my choices. This is <strong>not </strong>a tutorial in Jenkins or pipeline scripts. It&#8217;s more of a tour.</p>
+<p class="wp-block-paragraph">In this post I&#8217;ll outline how I set up <a href="https://www.jenkins.io/">Jenkins</a> to make reliable repeatable Unity builds, using a pipelines script (also called a jenkinsfile) that&#8217;s stored inside source control. I&#8217;ll outline the plugins I used and the reasons behind some of my choices. This is <em>not </em>a tutorial in Jenkins or pipeline scripts. It&#8217;s more of a tour.</p>
 
 
 
-<p class="wp-block-paragraph">I&#8217;m not an expert in Jenkins &#8211; most of this is pieced together from the <a href="https://www.jenkins.io/doc/book/pipeline/">Pipeine docs</a> and google. It may be that there are better ways to achieve the same results &#8211; I&#8217;d be keen to hear about them in the comments!</p>
+<p class="wp-block-paragraph">I&#8217;m not an expert in Jenkins &#8211; most of this is pieced together from the <a href="https://www.jenkins.io/doc/book/pipeline/">Pipeline docs</a> and google. It may be that there are better ways to achieve the same results &#8211; I&#8217;d be keen to hear about them in the comments!</p>
 
 
 
@@ -40,7 +40,7 @@ original_url: https://andrewfray.wordpress.com/2020/12/28/building-unity-using-j
 
 
 
-<p class="wp-block-paragraph">All these go away if we move to a piepelines script stored in a file (commonly called &#8220;the jenkinsfile&#8221;) within the project&#8217;s source control. </p>
+<p class="wp-block-paragraph">All these go away if we move to a pipelines script stored in a file (commonly called &#8220;the jenkinsfile&#8221;) within the project&#8217;s source control. </p>
 
 
 
@@ -88,7 +88,7 @@ original_url: https://andrewfray.wordpress.com/2020/12/28/building-unity-using-j
 
 
 
-<p class="wp-block-paragraph">The pipeline itself doesn&#8217;t start until the <code>pipeine</code> keyword, but since this is a subset of Groovy, we can define constants at the top. </p>
+<p class="wp-block-paragraph">The pipeline itself doesn&#8217;t start until the <code>pipeline</code> keyword, but since this is a subset of Groovy, we can define constants at the top. </p>
 
 
 <div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
@@ -254,7 +254,7 @@ retry(count: 2) {
 {% endhighlight %}</div>
 
 
-<p class="wp-block-paragraph">This is the first time we&#8217;ve seen Jenkinfile talk to Unity! We&#8217;ll explain more in the next section, but just pretend you understand it for now. The important part is <code>-MyTestOnly</code>, which tells our build function to only set script defines, recompile, and quit. </p>
+<p class="wp-block-paragraph">This is the first time we&#8217;ve seen Jenkinsfile talk to Unity! We&#8217;ll explain more in the next section, but just pretend you understand it for now. The important part is <code>-MyTestOnly</code>, which tells our build function to only set script defines, recompile, and quit. </p>
 
 
 
