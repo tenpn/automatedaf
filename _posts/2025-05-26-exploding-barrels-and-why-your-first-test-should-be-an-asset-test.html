@@ -1,0 +1,237 @@
+---
+layout: post
+title: "Exploding barrels, and why your first test should be an Asset Test"
+date: 2025-05-26 16:19:44 +0000
+description: "Learn about asset tests: an accessible approach to writing tests for game projects, and a great starting point for people new to testing"
+image: /images/blog/2025/05/half-life-2-exploding-barrels.jpg
+categories: [Test automation]
+original_url: https://andrewfray.wordpress.com/2025/05/26/exploding-barrels-and-why-your-first-test-should-be-an-asset-test/
+---
+
+<p class="wp-block-paragraph">On Rollerdrome one day, we had a p2 bug come in where a specific red barrel on level 3 wasn&#8217;t exploding when shot. As we all know, it&#8217;s not really a video game unless barrels explode &#8211; it&#8217;s just a sparkling spreadsheet &#8211; so this was important to fix. </p>
+
+
+
+<figure class="wp-block-image"><img src="/images/blog/2025/05/half-life-2-exploding-barrels.jpg" alt="" /><figcaption class="wp-element-caption">(Exploding barrels from Half Life 2, because Rollerdrome&#8217;s barrels are actually quite hard to screenshot)</figcaption></figure>
+
+
+
+<p class="wp-block-paragraph">When a programmer looked at the bug, it became obvious that this was a simple fix. Someone had accidentally changed the layer on this barrel, meaning bullets couldn&#8217;t hit it and the barrel wouldn&#8217;t explode. This is a dream bug for a programmer! Reset the dropdown, submit the change, resolve the ticket, move on. </p>
+
+
+
+<p class="wp-block-paragraph">However from a QA point of view, it&#8217;s a very scary bug. If it&#8217;s possible that one barrel has the wrong layer, maybe more do? Maybe we should explode every barrel in the game, to double-check? Maybe we should do that before <em>every </em>release? Their checklist has just grown a little bit with a task that&#8217;s repetitive and error-prone. </p>
+
+
+
+<p class="wp-block-paragraph">But what if we could add some automation to stop this bug from ever coming back, and allow QA to look at more interesting issues and repros? What if it was the perfect kind of test for people new to testing?</p>
+
+
+
+<h2 class="wp-block-heading">Asset Tests</h2>
+
+
+
+<p class="wp-block-paragraph">An asset test is any test that looks at data on disk &#8211; blueprint configuration values, prefab variables, texture compression values, static mesh properties, etc. Asset tests answer questions like:</p>
+
+
+
+<ul class="wp-block-list">
+<li>Do all animations follow the correct naming conventions?</li>
+
+
+
+<li>Does every gun have a valid ammo type assigned? </li>
+
+
+
+<li>Is every barrel on every level set to the correct physics layer?</li>
+</ul>
+
+
+
+<p class="wp-block-paragraph">Because these tests stay away from gameplay logic of any kind, they are normally very simple to write &#8211; almost always just a line or two.</p>
+
+
+
+<p class="wp-block-paragraph">They&#8217;re also very simple to maintain, because &#8220;barrels being on the correct physics layer&#8221; is very unlikely to change for the lifetime of the project.</p>
+
+
+
+<p class="wp-block-paragraph">On Rollerdrome, by quickly writing a new asset test for barrels in levels, we made sure the build server never generated a build with barrels on the wrong layer, and saved QA the time to explode every single one, for every single major release. If writing the test took 30 minutes (which is an overestimate), we wouldn&#8217;t have to go through many major releases to start making a return on that investment. </p>
+
+
+
+<h2 class="wp-block-heading">Implementing Asset Tests</h2>
+
+
+
+<p class="wp-block-paragraph">This isn&#8217;t a full tutorial for asset tests (let me know if you want one of those) but we&#8217;ll discuss some of the prerequisites:</p>
+
+
+
+<ul class="wp-block-list">
+<li>A test framework </li>
+
+
+
+<li>A build server</li>
+
+
+
+<li>(Highly desirable) Parameterised test fixtures </li>
+</ul>
+
+
+
+<p class="wp-block-paragraph">Unity has <a href="https://docs.unity3d.com/Packages/com.unity.test-framework@1.5/manual/index.html">Unity Test Framework</a>, which is a wrapper around <a href="https://docs.nunit.org/index.html">NUnit</a>, a populate C# test framework. Unreal has <a href="/2025/04/09/the-topography-of-unreal-test-automation-in-2025/">many testing frameworks</a>, but I think <a href="https://dev.epicgames.com/documentation/en-us/unreal-engine/automation-spec-in-unreal-engine">Spec</a> is particularly well suited to asset tests. </p>
+
+
+
+<p class="wp-block-paragraph">You should have a build server of some kind, and it should run your tests, which in most cases will just be a specific command line call to your engine. It&#8217;s important it reports test failures in an obvious way, and how it does this is framework-dependent. Unty&#8217;s DevOps build system and Epic&#8217;s Gauntlet can both do this for you. </p>
+
+
+
+<h2 class="wp-block-heading">Parameterised Test Fixtures</h2>
+
+
+
+<p class="wp-block-paragraph">A &#8220;test fixture&#8221; is a group of related tests. In NUnit/Unity Test Framework, this looks like a class with an attribute containing a number of public functions. If we&#8217;re writing a scene asset test fixture, to check many things alongside barrel layers, that might look like this: </p>
+
+
+
+<pre class="wp-block-code"><code>using NUnit.Framework;
+
+namespace Game.Tests {
+
+  &#091;TestFixture]
+  class SceneAssetTestFixture {
+
+    &#091;Test]
+    public void AllBarrelsOnCorrectLayer() {
+      var allBarrels = 
+          Object.FindObjectsByType&lt;Barrel&gt;(FindObjectsSortMode.None);
+      foreach (var barrel in allBarrels)
+      {
+        Assert.That(barrel.gameObject.layer,         
+            Is.EqualTo(GameConstants.BulletLayer));
+      }
+    }
+
+    // more scene asset tests...
+  }
+}</code></pre>
+
+
+
+<p class="wp-block-paragraph">This is great, but how do we test this against every scene?  We could put code inside our AllBarrelsOnCorrectLayer test to load every scene in turn, but then a failure will be less than informative, and if we added more tests for other things in a scene, we&#8217;d have to duplicate that logic. </p>
+
+
+
+<p class="wp-block-paragraph">Instead we can use an NUnit feature called TestFixtureSource to create a &#8220;parameterised&#8221; test fixture &#8211; letting NUnit create one fixture per level for us. We&#8217;ll use [OneTimeSetUp] here to load the scene only when the tests start. Similar features exist for other test frameworks. </p>
+
+
+
+<pre class="wp-block-code"><code>using NUnit.Framework;
+
+namespace Game.Tests {
+  public class SceneSource : IEnumerable&lt;string&gt; {
+    public IEnumerator&lt;string&gt; GetEnumerator() {
+      return EditorBuildSettings.scenes
+          .Select(scene =&gt; scene.path)
+          .GetEnumerator();
+    }
+    IEnumerator IEnumerable.GetEnumerator() =&gt; GetEnumerator();
+  }
+
+  &#091;TestFixtureSource(typeof(SceneSource))]
+  public class SceneAssetTestFixture {
+    private readonly string m_sceneName;
+    public SceneAssetTestFixture(string sceneName) {
+      m_sceneName = sceneName;
+    }
+
+    &#091;OneTimeSetUp]
+    public void OneTimeSetup() {
+      EditorSceneManager.OpenScene(m_sceneName, OpenSceneMode.Single);
+    }
+
+    &#091;Test]
+    public void AllBarrelsOnCorrectLayer() {
+      // ...</code></pre>
+
+
+
+<p class="wp-block-paragraph">To explain this code: </p>
+
+
+
+<ul class="wp-block-list">
+<li>SceneSource produces a sequence of strings, each of which is the path of a scene, coming from the build list. This logic can be customised for your project. </li>
+
+
+
+<li>SceneAssetTestFixture now has a [TestFixtureSource(typeof(SceneSource))] and has a string constructor</li>
+
+
+
+<li>One SceneAssetTestFixture will be instantiated for every scene</li>
+
+
+
+<li>When we run the tests, OneTimeSetUp runs, which loads the scene in the editor </li>
+
+
+
+<li>&#8230;the AllBarrelsOnCorrectLayer, and any other scene asset tests, can now run </li>
+</ul>
+
+
+
+<p class="wp-block-paragraph">In the unity test runner, you see one entry per scene, so can easily see which scenes have problems, and easily run specific tests on specific scenes. </p>
+
+
+
+<figure class="wp-block-image size-large"><a href="/images/blog/2025/05/unity-test-runner-scene-asset-tests.png"><img loading="lazy" width="944" height="326" data-attachment-id="772" data-permalink="https://andrewfray.wordpress.com/2025/05/26/exploding-barrels-and-why-your-first-test-should-be-an-asset-test/image-9/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/05/image.png" data-orig-size="944,326" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="image" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/05/image.png?w=944" src="/images/blog/2025/05/unity-test-runner-scene-asset-tests.png" alt="" class="wp-image-772" /></a></figure>
+
+
+
+<p class="wp-block-paragraph">When you run these, you&#8217;ll be able to see Unity load each scene in turn, quickly run the tests, and return to the scene you&#8217;re currently editing. It&#8217;s not instant, but it&#8217;s still very swift. </p>
+
+
+
+<p class="wp-block-paragraph">We had to write a little boilerplate for the first test, but we&#8217;re talking an hour at most, and then adding new tests should be really straightforward. Similar setups could be made for, for example, every prefab with a specific tag or asset under a certain folder. </p>
+
+
+
+<h2 class="wp-block-heading">Driving new asset tests through bugs</h2>
+
+
+
+<p class="wp-block-paragraph">Now you know how to do this, it&#8217;s tempting to firehose in new tests of any and everything you can think of. This can work, but if you write a test and it never fails for the lifetime of the project, you&#8217;ve wasted time writing it and repeatedly running it. </p>
+
+
+
+<p class="wp-block-paragraph">Better to write tests that have a plausible chance of failing, and a good source of those is Regression Tests. Regression tests are tests you put in with a bug fix, to make sure the bug never comes back. They definitely have plausibility, because you&#8217;ve seen it happen once, and you can very quickly grow a large suite of useful tests this way. </p>
+
+
+
+<p class="wp-block-paragraph">Not all bugs are suitable to be turned into an asset test, especially if they involve game logic, but a surprising number are. </p>
+
+
+
+<h2 class="wp-block-heading">Asset tests as a gateway, or as a destination</h2>
+
+
+
+<p class="wp-block-paragraph">I hope you now see that asset tests can very easy to set up, are so simple they don&#8217;t need much maintenance, and can bring concrete benefits very quickly to a project. You could just do this, and do no other automation in your project, and you&#8217;ll have done a good thing. </p>
+
+
+
+<p class="wp-block-paragraph">However if you want to go further, you should check out my Develop 2023 talk about <a href="https://www.youtube.com/watch?v=e9dsX_VEz28">Rollerdrome&#8217;s pragmatic approach to test automation</a> for what to do next, and/or <a href="https://www.linkedin.com/in/andrew-fray-9992572/">contact me on LinkedIn</a> to chat about specialist training!</p>
+
+
+
+<figure class="wp-block-embed is-type-video is-provider-youtube wp-block-embed-youtube wp-embed-aspect-16-9 wp-has-aspect-ratio"><div class="wp-block-embed__wrapper">
+<span class="embed-youtube" style="text-align:center; display: block;"><iframe loading="lazy" class="youtube-player" width="640" height="360" src="https://www.youtube.com/embed/e9dsX_VEz28?version=3&#038;rel=1&#038;showsearch=0&#038;showinfo=1&#038;iv_load_policy=1&#038;fs=1&#038;hl=en&#038;autohide=2&#038;wmode=transparent" allowfullscreen="true" style="border:0;" sandbox="allow-scripts allow-same-origin allow-popups allow-presentation allow-popups-to-escape-sandbox"></iframe></span>
+</div></figure>

@@ -12,10 +12,9 @@
   <link rel="shortcut icon" href="/favicon/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
   <link rel="manifest" href="/favicon/site.webmanifest" />
-  <title>{{title}}</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/main.css" />
 
   <!-- MailerLite Universal -->
   <script>
@@ -43,7 +42,7 @@
   {% seo %}
 </head>
 
-<body>
+<body class="{% if page.body_class %}{{ page.body_class }}{% elsif page.layout == 'post' %}subpage{% endif %}">
   <div id="page-wrapper">
     <!-- Header -->
     <section id="header">
@@ -51,15 +50,14 @@
         <div class="row">
           <div class="col-12">
             <!-- Logo -->
-            <h1><a href="index.html" id="logo">Andrew Fray</a></h1>
+            <h1><a href="/index.html" id="logo">Andrew Fray</a></h1>
 
             <!-- Nav -->
             <nav id="nav">
-              <a href="index.html">Home</a>
+              <a href="/index.html">Home</a>
 
-              <a href="publicspeaking.html">Public Speaking</a>
-              <a target="_blank" href="https://andrewfray.wordpress.com"><i
-                  class="fa-solid fa-arrow-up-right-from-square"></i> Blog</a>
+              <a href="/publicspeaking.html">Public Speaking</a>
+              <a href="/blog.html">Blog</a>
               <a target="_blank" href="https://atig.dev/"><i class="fa-solid fa-arrow-up-right-from-square"></i> ATiG
                 Community </a>
             </nav>
@@ -115,11 +113,11 @@
   </div>
 
   <!-- Scripts -->
-  <script src="assets/js/jquery.min.js"></script>
-  <script src="assets/js/browser.min.js"></script>
-  <script src="assets/js/breakpoints.min.js"></script>
-  <script src="assets/js/util.js"></script>
-  <script src="assets/js/main.js"></script>
+  <script src="/assets/js/jquery.min.js"></script>
+  <script src="/assets/js/browser.min.js"></script>
+  <script src="/assets/js/breakpoints.min.js"></script>
+  <script src="/assets/js/util.js"></script>
+  <script src="/assets/js/main.js"></script>
   <script src="https://kit.fontawesome.com/65d82cdd5e.js" crossorigin="anonymous"></script>
 </body>
 

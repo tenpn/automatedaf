@@ -39,6 +39,12 @@ social:
 
 # Build settings
 
+defaults:
+  - scope:
+      type: posts
+    values:
+      permalink: /:year/:month/:day/:title/
+
 plugins:
   - jekyll-feed
   - jekyll-seo-tag

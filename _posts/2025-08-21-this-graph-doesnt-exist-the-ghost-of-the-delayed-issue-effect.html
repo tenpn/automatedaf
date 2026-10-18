@@ -1,0 +1,35 @@
+---
+layout: post
+title: "This Graph Doesn’t Exist: The Ghost of The Delayed Issue Effect"
+date: 2025-08-21 13:45:30 +0000
+image: /images/blog/2025/08/relative-cost-of-fixing-defects-graph.png
+image_fit: contain
+categories: [General]
+original_url: https://andrewfray.wordpress.com/2025/08/21/this-graph-doesnt-exist-the-ghost-of-the-delayed-issue-effect/
+---
+
+<figure class="wp-block-image size-large"><a href="/images/blog/2025/08/relative-cost-of-fixing-defects-graph.png"><img loading="lazy" width="865" height="461" data-attachment-id="786" data-permalink="https://andrewfray.wordpress.com/2025/08/21/this-graph-doesnt-exist-the-ghost-of-the-delayed-issue-effect/image-10/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/08/image.png" data-orig-size="865,461" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="image" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/08/image.png?w=865" src="/images/blog/2025/08/relative-cost-of-fixing-defects-graph.png" alt="" class="wp-image-786" /></a></figure>
+
+
+
+<p class="wp-block-paragraph">So this graph is pretty famous, especially in quality circles. It&#8217;s meant to convey that fixing things earlier is better &#8211; by orders of magnitude. It&#8217;s a pretty stark visual of something we feel is intrinsically true.<br><br>Only problem is, it&#8217;s bullshit.<br><br>This specific visual is from The Journal Of Information Systems Technology And Planning by Dawson et al, and they reference it from another source, saying &#8220;A study was performed by the IBM System Science Institute&#8221;. There&#8217;s no citation for this study in the paper. Googling around, there&#8217;s very few references to the IBM System Science Institute at all. What&#8217;s going on?</p>
+
+
+
+<p class="wp-block-paragraph">This is not the first paper to use this 1/6.5/15/100x data, and Morendil on github has done <a href="https://gist.github.com/Morendil/ebfa32d10528af04e2ccb8995e3cb4a7">the deep dive</a>, but it turns out it was probably someone&#8217;s gut feel for a course taught internally at IBM. Not a study, not a published paper, just numbers pulled out of someone&#8217;s ass. Through a game of telephone and poor scholarship it&#8217;s become quoted as absolute truth.</p>
+
+
+
+<p class="wp-block-paragraph">So is there any real evidence for this?</p>
+
+
+
+<p class="wp-block-paragraph">Menzies et al did <a href="https://arxiv.org/pdf/1609.04886">a study in 2016</a> that seems to be the only real attempt to figure out if delaying fixes is more costly (they call it the Delayed Issue Effect, DIE) with real data, and they find no conclusive evidence. <br><br>However they were working with projects with median duration of 60 days and programs only 4,000 lines long. It&#8217;s not surprising that any DIE wouldn&#8217;t manifest itself at this scale, so I don&#8217;t think it&#8217;s conclusive.</p>
+
+
+
+<p class="wp-block-paragraph">We might never have good evidence here! Large-scale computer science research seems like a really hard problem to crack. The data just isn&#8217;t shared from commercial development. But that doesn&#8217;t mean we should perpetuate bad graphs just because they correlate with our gut feel.</p>
+
+
+
+<p class="wp-block-paragraph">If anyone has any better data on the Delayed Issue Effect, let me know! </p>

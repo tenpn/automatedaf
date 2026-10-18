@@ -1,0 +1,64 @@
+---
+layout: default
+title: Andrew Fray, Blog
+description: Writing on automated testing and studio devops in gamedev
+body_class: subpage
+---
+
+<!-- Content -->
+<section id="content">
+  <div class="container">
+    <div class="row aln-center">
+      <div class="col-8 col-12-medium">
+        <header>
+          <h2>Blog</h2>
+        </header>
+        {% assign category_names = "" | split: "" %}
+        {% for category in site.categories %}{% assign category_names = category_names | push: category[0] %}{% endfor %}
+        {% assign category_names = category_names | sort_natural %}
+        <nav class="category-filter">
+          <a href="/blog.html" data-category="">All</a>
+          {% for category in category_names %}<a href="/blog.html#{{ category | slugify }}" data-category="{{ category | slugify }}">{{ category }}</a>{% endfor %}
+        </nav>
+        {% for post in site.posts %}
+        {% assign preview = post.image %}
+        {% unless preview %}
+          {% assign img_tag = post.content | split: "<img" | slice: 1 | first %}
+          {% if img_tag %}{% assign preview = img_tag | split: 'src="' | slice: 1 | first | split: '"' | first %}{% endif %}
+        {% endunless %}
+        <section class="post-summary" data-categories="{% for category in post.categories %}{{ category | slugify }} {% endfor %}">
+          {% if preview %}
+          <a href="{{ post.url | relative_url }}" class="feature-image post-preview{% if post.image_fit == 'contain' %} contain{% endif %}"><img src="{{ preview | relative_url }}" alt="" loading="lazy" /></a>
+          {% endif %}
+          <header>
+            <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
+            <h3><time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%-d %B %Y" }}</time></h3>
+            {% include post-categories.html categories=post.categories %}
+          </header>
+          <p>{% if post.description %}{{ post.description }}{% else %}{{ post.content | replace: "</p>", " </p>" | replace: "<br", " <br" | strip_html | truncatewords: 55 }}{% endif %}</p>
+          <p><a href="{{ post.url | relative_url }}">Read more</a></p>
+        </section>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    function applyFilter() {
+      var selected = decodeURIComponent(location.hash.slice(1));
+      var known = document.querySelector('.category-filter a[data-category="' + selected + '"]');
+      if (!known) selected = "";
+      document.querySelectorAll(".post-summary").forEach(function (post) {
+        var categories = post.dataset.categories.split(" ");
+        post.hidden = selected !== "" && categories.indexOf(selected) === -1;
+      });
+      document.querySelectorAll(".category-filter a").forEach(function (link) {
+        link.classList.toggle("active", link.dataset.category === selected);
+      });
+    }
+    window.addEventListener("hashchange", applyFilter);
+    applyFilter();
+  })();
+</script>

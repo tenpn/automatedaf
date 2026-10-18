@@ -1,0 +1,323 @@
+---
+layout: post
+title: "There’s no fire without Smoke Tests"
+date: 2025-09-03 14:19:50 +0000
+image: /images/blog/2025/09/candle-smoke.jpg
+categories: [Test automation]
+original_url: https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without-smoke-tests/
+---
+
+<p class="wp-block-paragraph">It&#8217;s a familiar tale: you&#8217;ve set up an expensive and time-consuming playtest, and just wanted to squeeze in one more feature. You cook the build, give it a quick sanity check, and send it off. The playtest starts well, but as players start to hit level 4, they encounter bugs, error spam and fatal crashes. Your final feature caused a knock-on effect deep into the game, and now your playtest is ruined. </p>
+
+
+
+<p class="wp-block-paragraph">Wouldn&#8217;t it be great if there was a type of automated test that could quickly validate the whole project? It might not find specific issues, but if there&#8217;s a fire, it&#8217;ll spot the smoke, prompting you to investigate more.</p>
+
+
+
+<figure class="wp-block-image size-large"><a href="/images/blog/2025/09/candle-smoke.jpg"><img data-attachment-id="806" data-permalink="https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without-smoke-tests/175630656_26d34b951a_k/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/175630656_26d34b951a_k.jpg" data-orig-size="2047,1365" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="175630656_26d34b951a_k" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/175630656_26d34b951a_k.jpg?w=1024" loading="lazy" width="1024" height="682" src="/images/blog/2025/09/candle-smoke.jpg" alt="" class="wp-image-806" /></a><figcaption class="wp-element-caption"><a href="https://flic.kr/p/gw9SL">Flirtation </a>by Andrew Yee, <a href="https://creativecommons.org/licenses/by/2.0/deed.en">CC BY 2.0</a></figcaption></figure>
+
+
+
+<h2 class="wp-block-heading">What are Smoke Tests?</h2>
+
+
+
+<p class="wp-block-paragraph">A smoke test is an automated test that &#8220;explores as much of the game runtime as is reasonable, looking for obvious problems&#8221;. It&#8217;s not far off the type of test people imagine when first learning about test automation: a system that plays the game from start to finish looking for issues. You might be lucky in that your game already has bots or some similar player-facing feature which can be repurposed for a full playthrough, but you can still have a very effective smoke test suite without it. </p>
+
+
+
+<p class="wp-block-paragraph">In fact an effective smoke test can be as simple as loading each level in turn, waiting, and returning to the main menu. This may not exercise every gameplay system, but a passing test still gives you a lot of confidence about the game: at least the level exists, at least it loads without problems. </p>
+
+
+
+<p class="wp-block-paragraph">What do we mean by &#8220;problems&#8221;? A great place to start is checking the game&#8217;s log for exceptions, errors and warnings. Just by doing that you can catch problems such as:</p>
+
+
+
+<ul class="wp-block-list">
+<li>Level 5 missing a critical gameplay object</li>
+
+
+
+<li>Initialisation order bugs between systems on level 8</li>
+
+
+
+<li>Incorrect assumptions about world state in level 12</li>
+
+
+
+<li>&#8230;and a whole load of validation that the game engine will already be doing for you to make sure the core of the game is running correctly</li>
+</ul>
+
+
+
+<p class="wp-block-paragraph">When a smoke test fails, often all you&#8217;re really learning is that there&#8217;s a fire somewhere, but not what that fire is. We&#8217;ll normally have to do some investigating to see what caused the failure, but it&#8217;s still an incredibly useful safety net. </p>
+
+
+
+<p class="wp-block-paragraph">And it&#8217;s extremely effective for the amount of effort it takes. By the end of this blog post you&#8217;ll see how small a real smoke test suite can be &#8211; considering the value you get out of them, they&#8217;re maybe the tests with the best bang-for-buck out there. </p>
+
+
+
+<h2 class="wp-block-heading">Creating Smoke Tests (In Unity)</h2>
+
+
+
+<p class="wp-block-paragraph">As an example, we&#8217;ll implement a smoke test in Unity. I&#8217;m going to assume you&#8217;re already familiar with <a href="https://docs.unity3d.com/6000.2/Documentation/Manual/test-framework/test-framework-introduction.html">Unity Test Framework</a> and <a href="https://docs.nunit.org/index.html">NUnit</a>, although the general principles here apply to any game engine or test framework.</p>
+
+
+
+<p class="wp-block-paragraph">Let&#8217;s build the smoke tests in <a href="https://assetstore.unity.com/packages/templates/unity-learn-karting-microgame-urp-150956">Unity&#8217;s Karting demo</a>. I like using this because it&#8217;s not designed to be automated, but we can still do a lot of stuff very quickly. For those not familiar, below is a user playing the game through the main menu, past the race countdown, and starting to race. It doesn&#8217;t seem unreasonable to simulate that in our smoke tests.</p>
+
+
+
+<figure class="wp-block-image size-large"><a href="/images/blog/2025/09/kart-menu-to-race-start.gif"><img data-attachment-id="812" data-permalink="https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without-smoke-tests/kart-intro/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/kart-intro.gif" data-orig-size="1195,700" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="kart-intro" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/kart-intro.gif?w=1024" loading="lazy" width="1024" height="599" src="/images/blog/2025/09/kart-menu-to-race-start.gif" alt="A main menu showing PLAY, a mouse pointer selects the button. A kart track loads, and counts in 3 2 1 before the kart drives off. " class="wp-image-812" /></a></figure>
+
+
+
+<p class="wp-block-paragraph">We&#8217;ll break this down into multiple individual tests:</p>
+
+
+
+<ul class="wp-block-list">
+<li>Can we boot to the main menu without problems?</li>
+
+
+
+<li>Can we load the track without problems?</li>
+
+
+
+<li>Does the race start without problems?</li>
+</ul>
+
+
+
+<p class="wp-block-paragraph">We&#8217;ll create a LevelSmokeTests.cs in an appropriate <a href="https://docs.unity3d.com/6000.2/Documentation/Manual/test-framework/workflow-create-test-assembly.html">PlayMode folder</a>, but for now it just has a blank first test:</p>
+
+
+
+<pre class="wp-block-code"><code>using System.Collections;
+using UnityEngine;
+using UnityEngine.TestTools;
+
+public class LevelSmokeTestsFixture
+{
+    &#091;UnityTest]
+    public IEnumerator MainMenu_Booted_NoErrors()
+    {
+        yield return new WaitForSeconds(10); // just to get it compiling
+    }
+}</code></pre>
+
+
+
+<p class="wp-block-paragraph">(We&#8217;re using the <a href="https://en.wikipedia.org/wiki/Given-When-Then">GIVEN_WHEN_THEN naming convention</a> here)</p>
+
+
+
+<p class="wp-block-paragraph">You&#8217;ll notice when you run this test, that the game boots to an empty level and does nothing, rather than booting to our main menu: </p>
+
+
+
+<figure class="wp-block-image size-large"><a href="/images/blog/2025/09/empty-unity-playmode-test.png"><img data-attachment-id="815" data-permalink="https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without-smoke-tests/image-12/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/image.png" data-orig-size="1960,1281" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="image" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/image.png?w=1024" loading="lazy" width="1024" height="669" src="/images/blog/2025/09/empty-unity-playmode-test.png" alt="A running empty unity playmode test, showing an empty Hierarchy and blank scene view." class="wp-image-815" /></a></figure>
+
+
+
+<p class="wp-block-paragraph">This is how all playmode tests behave. It&#8217;s up to you to get us to the next step. In our case, we want to load scene 0 in our build list and wait for the menu to load. We&#8217;ll test for problems the same way every time &#8211; subscribing to Application.logMessageRecieved, and checking for error type. We&#8217;ll set a flag to true if we see a problematic log. This lets us also fail the test if we see any warnings &#8212; I strongly believe warnings should be treated as seriously as errors, but that&#8217;s another blog post. </p>
+
+
+
+<pre class="wp-block-code"><code>public class LevelSmokeTestsFixture
+{
+    &#091;OneTimeSetUp]
+    public void LevelSmokeTestsOneTimeSetup()
+    {
+        Application.logMessageReceived += OnLog;
+    }
+
+    &#091;SetUp]
+    public void SetUp()
+    {
+        m_isTestFailed = false;
+    }
+    
+    private void OnLog(string condition, string stacktrace, LogType type)
+    {
+        if (type is LogType.Assert or LogType.Error or
+                    LogType.Exception or LogType.Warning)
+        {
+            m_isTestFailed = true;
+        }
+    }
+    private bool m_isTestFailed;
+    
+    &#091;UnityTest]
+    public IEnumerator MainMenu_Booted_NoErrors()
+    {
+        SceneManager.LoadScene(0);
+        yield return null;
+        Assert.That(m_isTestFailed, Is.False);
+    }
+}</code></pre>
+
+
+
+<p class="wp-block-paragraph">Note that this is not a complicated project, so we can rely on yield return null to fully get us to the main menu, but if you use a loading screen, you might need to wait until there&#8217;s some obvious signal that the game is booted &#8211; maybe the presence of a specific gameobject or singleton. </p>
+
+
+
+<p class="wp-block-paragraph">We can now run the test and maybe catch the main menu appear in the Game window for a brief moment before the test exits. Congratulations, that&#8217;s a decent smoke test! Just having this running on every build will catch a huge category of bugs. You could stop here and it would be fine, but let&#8217;s move a little further.</p>
+
+
+
+<h2 class="wp-block-heading">Testing our Test</h2>
+
+
+
+<p class="wp-block-paragraph">I said we were done with that test, but there&#8217;s actually an important step to remember: testing the test. It&#8217;s very easy to write a test that passes but isn&#8217;t actually testing what you think it is. Whenever you write a new test, you should always see it fail for a predictable reason first. To do that, we&#8217;ll just add a Debug.LogError to somewhere in the boot code &#8211; I chose an Awake function in LoadSceneButton &#8211; and run the test to see it fail. </p>
+
+
+
+<figure class="wp-block-image size-large"><a href="/images/blog/2025/09/unity-test-runner-unhandled-log-failure.png"><img data-attachment-id="824" data-permalink="https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without-smoke-tests/image-13/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/image-1.png" data-orig-size="788,429" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="image" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/image-1.png?w=788" loading="lazy" width="788" height="429" src="/images/blog/2025/09/unity-test-runner-unhandled-log-failure.png" alt="A unity Test Runner window, showing our test in red, with text below saying there was an unhandled log message." class="wp-image-824" /></a></figure>
+
+
+
+<p class="wp-block-paragraph">Now we know the test works, we can commit it to source control and move on. </p>
+
+
+
+<h2 class="wp-block-heading">Avoiding UI Testing In Smoke Tests</h2>
+
+
+
+<p class="wp-block-paragraph">Our next step is to hit the big Play button in the main menu. It&#8217;s tempting at this point to force a mouse click or something &#8211; after all, that&#8217;s most representative of the player&#8217;s experience, and if the Play button is broken, we&#8217;d want to know in a smoke test, right? </p>
+
+
+
+<p class="wp-block-paragraph">I always recommend people new to testing avoid the UI as much as possible. If we did a mouse click here, or even something slightly more intelligent like find the gameobject by name or tag and force a click event, then suddenly the way this test will be most likely to fail is because someone moved the button. Or renamed the button. Or changed the hierarchy. </p>
+
+
+
+<p class="wp-block-paragraph">Those aren&#8217;t true test failures, in testing lingo they would be &#8220;false positives&#8221; &#8211; and in general false positives undermine trust in the automation. It&#8217;s easy to see a failure and assume it&#8217;s just a UI change again. Not only that, but any failure caused by changed UI means updating the test, which is easy to deprioritise. Pretty soon the boot test has been failing for weeks, and it might as well not exist. </p>
+
+
+
+<p class="wp-block-paragraph">On top of that, if your Play button is genuinely broken, QA will definitely notice it very quickly. We&#8217;re not helping QA to focus here.</p>
+
+
+
+<p class="wp-block-paragraph">So while there are techniques to do this more robustly, it&#8217;s best when starting out to avoid the UI layer entirely. Find the thing that the button pokes and call that from our test. How your level loads is much less likely to change over the lifetime of a project than the UI layout is. </p>
+
+
+
+<p class="wp-block-paragraph">In our case, the button calls SceneManager.LoadSceneAsync directly, so that&#8217;s what we&#8217;ll call in our test:</p>
+
+
+
+<pre class="wp-block-code"><code>&#091;UnityTest]
+public IEnumerator MainMenu_AndLoadsLevel_NoErrors()
+{
+    yield return SceneManager.LoadSceneAsync("MainScene");
+    yield return null;
+    Assert.That(m_isTestFailed, Is.False);
+}</code></pre>
+
+
+
+<p class="wp-block-paragraph">However if we run this and pay close attention, we see that this new test runs <em>before</em> our boot test! That&#8217;s not right. In fact, NUnit does not define an execution order for tests (although in practice it&#8217;s alphabetical), because it&#8217;s normally a good idea to not have dependencies between tests. Dependencies can lead to fragile and hard-to-maintain tests, but in the case of most smoke tests, we need them. We&#8217;re looking to move through the game in stages, and it&#8217;s important to force an ordering here. </p>
+
+
+
+<p class="wp-block-paragraph">Luckily, the [Order] attribute exists just for that. Below I&#8217;ve added it, and also renamed the tests slightly so the alphabetical display in the editor reflects our ordering:</p>
+
+
+
+<pre class="wp-block-code"><code>&#091;UnityTest,Order(00)]
+public IEnumerator T00_MainMenu_Booted_NoErrors()
+{
+    SceneManager.LoadScene(0);
+    yield return null;
+    Assert.That(m_isTestFailed, Is.False);
+}
+
+&#091;UnityTest,Order(10)]
+public IEnumerator T10_MainMenu_AndLoadsLevel_NoErrors()
+{
+    yield return SceneManager.LoadSceneAsync("MainScene");
+    yield return null;
+    Assert.That(m_isTestFailed, Is.False);
+}</code></pre>
+
+
+
+<p class="wp-block-paragraph">Now when you run both tests, you might be able to catch them execute in order. You&#8217;ll notice the order is increasing in chunks of 10, so if there&#8217;s a future need, it&#8217;s not too disruptive to add tests in-between.</p>
+
+
+
+<p class="wp-block-paragraph">Now this test is complete, don&#8217;t forget to test your test and add an error somewhere in the game code for it to catch.</p>
+
+
+
+<h2 class="wp-block-heading">Waiting For Gameplay</h2>
+
+
+
+<p class="wp-block-paragraph">Our last test is to wait for race start, and again check for problems in the Log. This is the first time we&#8217;ve had to make a gameplay-side code change, because TimeManager did not expose IsRaceStarted. It&#8217;s not normally a good idea to make gameplay-side changes just for tests, but a read-only property like this seems like it could be useful for future gameplay code, so it&#8217;s forgivable. </p>
+
+
+
+<pre class="wp-block-code"><code>&#091;UnityTest, Order(20)]
+public IEnumerator T20_Race_Started_NoErrors()
+{
+    var timeManager = Object.FindFirstObjectByType&lt;TimeManager&gt;();
+    yield return new WaitUntil(() =&gt; timeManager.IsRaceStarted);
+    yield return new WaitForSeconds(0.5f);
+    Assert.That(m_isTestFailed, Is.False);
+}</code></pre>
+
+
+
+<p class="wp-block-paragraph">It&#8217;s perfectly valid to stop here, or to extend the smoke tests further over time. </p>
+
+
+
+<p class="wp-block-paragraph">The final successful test run might look something like this:</p>
+
+
+
+<figure class="wp-block-image size-large"><a href="/images/blog/2025/09/kart-smoke-test-full-run.gif"><img data-attachment-id="838" data-permalink="https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without-smoke-tests/kart-smoke-final-2/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/kart-smoke-final-1.gif" data-orig-size="1588,702" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="kart-smoke-final" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/kart-smoke-final-1.gif?w=1024" loading="lazy" width="1024" height="452" src="/images/blog/2025/09/kart-smoke-test-full-run.gif" alt="A full smoke test run, launched from the unity test runner. It loads the menu, enters the track, waits for the countdown, then exits the game with three green ticks." class="wp-image-838" /></a></figure>
+
+
+
+<h2 class="wp-block-heading">Dealing With Smoke Test Failures</h2>
+
+
+
+<p class="wp-block-paragraph">While it&#8217;s great that these tests are giving us a safety net, they&#8217;re not perfect. They can be slow compared to other kinds of automated test, and they are not always very informative. &#8220;There was an error while loading level 3&#8221; is useful but only the start of a journey. </p>
+
+
+
+<p class="wp-block-paragraph">That&#8217;s why it&#8217;s good to ask yourself when fixing smoke test failures if there&#8217;s a way to construct a faster, more informative automated test. A fire test to go with the smoke test. That way, if this particular problem happens again, you&#8217;ll be told more quickly and in more informative terms. That could take the form of an <a href="/2025/05/26/exploding-barrels-and-why-your-first-test-should-be-an-asset-test/">asset test</a>, unit test, actor test or something else. </p>
+
+
+
+<p class="wp-block-paragraph">This can be a great way to create pragmatic useful tests for your project over time. If you follow this pattern, you&#8217;ll initially see a lot of smoke test failures, but as your project progresses, you&#8217;ll see less and less and fire test failures will take over. </p>
+
+
+
+<h2 class="wp-block-heading">More Like This</h2>
+
+
+
+<p class="wp-block-paragraph">I hope you see that this was not complicated to add, to a project that wasn&#8217;t designed for automation, and consisted of basically two three-line functions and a four-line function. Adding smoke tests to your project should not be a big investment. </p>
+
+
+
+<p class="wp-block-paragraph">If you&#8217;d like to learn more about smoke tests and other test types, I often work with studios to help them get started with test automation through training and workshops. I also sometimes host public-facing workshops that you can buy individual tickets for. Find out more details at <a href="https://automateyour.games/">automateyour.games</a>. </p>
+
+
+
+<p class="wp-block-paragraph"></p>

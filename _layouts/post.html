@@ -1,0 +1,29 @@
+---
+layout: default
+---
+
+<!-- Content -->
+<section id="content">
+  <div class="container">
+    <div class="row aln-center">
+      <div class="col-8 col-12-medium">
+        <!-- Main Content -->
+        <section>
+          <header>
+            <h2>{{ page.title }}</h2>
+            <h3><time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%-d %B %Y" }}</time></h3>
+            {% include post-categories.html categories=page.categories %}
+          </header>
+          <div class="post-content">
+            {{ content }}
+          </div>
+          {% if page.original_url %}
+          <footer class="post-origin">
+            <p>This post was originally hosted on <a href="{{ page.original_url }}">andrewfray.wordpress.com</a></p>
+          </footer>
+          {% endif %}
+        </section>
+      </div>
+    </div>
+  </div>
+</section>
