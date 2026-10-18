@@ -1,0 +1,57 @@
+---
+layout: post
+title: "Setting up a Windows cloud machine to run unity with graphics, so Jenkins can run automated tests"
+date: 2021-06-12 20:52:09 +0000
+categories: [Build Engineering]
+original_url: https://andrewfray.wordpress.com/2021/06/12/getting-jenkins-to-run-full-unity-physics-and-animation-tests-on-a-windows-cloud-machine/
+---
+
+<p class="wp-block-paragraph">The latest in a <a href="/2020/09/12/smoke-testing-scenes-using-jenkins-and-unity-test-framework/">series</a> <a href="/2020/09/27/running-unity-tests-on-a-build-server/">of</a> <a href="/2020/12/28/building-unity-using-jenkins-pipelines/">posts</a> on getting <a href="https://docs.unity3d.com/Packages/com.unity.test-framework@1.1/manual/index.html">Unity Test Framework</a> tests running in jenkins in the cloud, because this seems entirely undocumented. </p>
+
+
+
+<p class="wp-block-paragraph">To recap, we had got as far as <a href="/2020/09/27/running-unity-tests-on-a-build-server/">running our playmode tests on the cloud machine</a>, but we had to use the -batchmode -nographics command line parameters. If we don&#8217;t, we get tons of errors about non-interactive window sessions. But if we do, we can no longer rely on <a href="https://docs.unity3d.com/Manual/CLIBatchmodeCoroutines.html">animation, physics, or some coroutines</a> during our tests! This limits us to basic lifecycle and validation tests, which isn&#8217;t great. </p>
+
+
+
+<p class="wp-block-paragraph">We need our cloud machine to pretend there&#8217;s a monitor attached, so unity can run its renderer and physics. </p>
+
+
+
+<p class="wp-block-paragraph">First, we&#8217;re going to need to make sure we have enough grunt in our cloud machine to run the game at a solid frametate. We use ec2, with the g4dn.xlarge machine (which has a decent GPU) and the <a href="https://aws.amazon.com/marketplace/pp/prodview-xrrke4dwueqv6?ref=cns_srchrow#pdp-overview">https://aws.amazon.com/marketplace/pp/prodview-xrrke4dwueqv6?ref=cns_srchrow#pdp-overview</a> ami, which pre-installs the right GPU drivers. </p>
+
+
+
+<p class="wp-block-paragraph">To do this, we&#8217;re going to set up a non-admin windows account on our cloud machine (because that&#8217;s just good practice), get it to auto-login on boot and ask it to connect to jenkins under this account. Read on for more details. </p>
+
+
+
+<p class="wp-block-paragraph">First, set up your new windows account by remoting into the admin account of the cloud machine:</p>
+
+
+
+<ul class="wp-block-list"><li>type &#8220;add user&#8221; in the windows start menu to get started adding your user. I call mine simply &#8220;jenkins&#8221;. Remember to save the password somewhere safe!</li><li>We need to be able to remote into the new user, so go to System Properties, and on the Remote tab click Select Users, and add your jenkins user</li></ul>
+
+
+
+<ul class="wp-block-list"><li>if jenkins has already run on this machine, you&#8217;ll want to give the new jenkins user rights to modify the c:\Workspace folder</li><li>You&#8217;ll also want to go into the Services app, find the jenkins service, and disable it. </li><li>Next, download autologon <a href="https://docs.microsoft.com/en-us/sysinternals/downloads/autologon">https://docs.microsoft.com/en-us/sysinternals/downloads/autologon</a>, uncompress it somewhere sensible, then run it. <ul><li>enter your new jenkins account details </li><li>click Enable </li><li>close the dialog</li></ul></li></ul>
+
+
+
+<p class="wp-block-paragraph">Now, log out of the admin account, and you should be able to remote desktop into the new account using the credentials you saved. </p>
+
+
+
+<p class="wp-block-paragraph">Now we need to make this new account register the computer with your jenkins server once it comes online. More details here <a href="https://wiki.jenkins.io/display/JENKINS/Distributed+builds#Distributedbuilds-Agenttomasterconnections">https://wiki.jenkins.io/display/JENKINS/Distributed+builds#Distributedbuilds-Agenttomasterconnections</a>, and it may be a bit different for you depending on setup, but here&#8217;s what we do:</p>
+
+
+
+<ul class="wp-block-list"><li>From the remote desktop of the jenkins user account, open a browser and log into your jenkins server</li><li>Go to the node page for your new machine, and configure the Launch Type to be Launch Agent By Connecting It To The Master</li><li>Switch to the node&#8217;s status tab and you should have an orange button to download the agent jnlp file</li><li>Put this file in the %userprofile%\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup folder</li><li>Change the Launch Type back to whatever you need (we use the Slave Setup plugin, despite the icky name <a href="https://plugins.jenkins.io/slave-setup/">https://plugins.jenkins.io/slave-setup/</a>) &#8212; it doesn&#8217;t need to stay as Launch Agent By Connecting It To The Master.</li></ul>
+
+
+
+<p class="wp-block-paragraph">We&#8217;re done. log out of remote desktop and reboot the machine. You should see it come alive in the jenkins server after a few minutes. If you remove the -batchmode and -nographics options from your unity commands, you should see the tests start to run with full physics and animation!</p>
+
+
+
+<p class="wp-block-paragraph"></p>

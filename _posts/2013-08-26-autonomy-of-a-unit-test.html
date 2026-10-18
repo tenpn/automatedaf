@@ -1,0 +1,71 @@
+---
+layout: post
+title: "Anatomy of a unit test"
+date: 2013-08-26 18:04:07 +0000
+categories: [Test Automation]
+original_url: https://andrewfray.wordpress.com/2013/08/26/autonomy-of-a-unit-test/
+---
+
+<p>In my spare time I maintain a unit testing library built for Unity3D. It&#8217;s called UnTest, it&#8217;s open-sourced under the MIT license, and you can download it <a href="https://github.com/tenpn/untest">here</a>.</p>
+<p>In the Unity3D community forums <a href="http://forum.unity3d.com/threads/194456-Announcing-UnTest-a-ground-up-unit-testing-framework-for-Unity3D">announcing</a> UnTest, _Shockwave asked for an example of some real-life unit tests written with this framework. UnTest is very xUnit-flavoured, so they follow a standard pattern, but I thought it would be a good excuse to talk about good unit testing practice.</p>
+<p>Much of my unit testing approach is from Roy Osherove&#8217;s <a href="http://artofunittesting.com/">Art of Unit Testing</a>, which is a very readable and practical book on unit testing. It&#8217;s aimed at .Net, so highly applicable for Unity3D development. The Art of Unit Testing website also has some recorded conference lectures from Osherove that are also worth watching. If you want to get better at writing unit tests, these are great resources.</p>
+<p>The unit test I&#8217;m going to dissect is below. It&#8217;s a real-life test from a production behaviour tree system. It&#8217;s not really important here to understand what a behaviour tree or a selection node is, as much as the patterns and conventions I followed. Good unit tests are <em>readable</em>, <em>maintainable</em> and <em>trustworthy</em>. As we walk through the test, I&#8217;ll explain how these qualities apply, and how to maximise them.</p>
+{% highlight csharp %}
+    [Test]
+    void UpdatePath_OneActionChild_AddsSelAndChildToPath() {
+
+        var actionNode = FakeAction.CreateStub();
+        m_selNode.AddChild(actionNode);
+
+        m_selNode.UpdatePath(m_path, NodeResult.Fails, null);
+
+        var selectionThenAction = new ITreeNode[] {
+            m_selNode, actionNode };
+        Assert.IsEqualSequence(m_path, selectionThenAction);
+    }
+{% endhighlight %}
+<p>To increase <strong>readability</strong>, the first thing to note is the context of the file you can&#8217;t see. It&#8217;s in a file called <em>SelectionNodeTests.cs</em>, so I instantly know this test applies to the SelectionNode class. There&#8217;s only one class in this file, with the same name, so there&#8217;s no chance of confusion.</p>
+<p>The name of the function follows a consistent convention throughout the codebase: <em>FunctionUndertest_Context_ExpectedResult</em>. There are many naming conventions you could follow, this is the one I do. <em>Context</em> is how we set up the world before running the function. In this case, we&#8217;re adding a single action node to the selection node. <em>ExpectedResult</em> is how we want the function to behave; here we want the selection node and the action node to be added to the path.</p>
+<p>It&#8217;s not important how long the name of this function is, since it&#8217;s never called from anywhere. The more readable and informative you can make the function name, the easier it will be to figure out what went wrong when it fails.</p>
+<p>The unit test is split into three sections following the AAA pattern: Arrange, Act, Assert.</p>
+<p><em>Arrange</em>, where I set up the selection for testing:</p>
+{% highlight csharp %}
+    var actionNode = FakeAction.CreateStub();
+    m_selNode.AddChild(actionNode);
+{% endhighlight %}
+<p>All I need to do is create an action node and add it to the selection node.</p>
+<p><em>Act</em>, where I execute the function we want to test:</p>
+{% highlight csharp %}
+    m_selNode.UpdatePath(m_path, NodeResult.Fails, null);
+{% endhighlight %}
+<p><em>Assert</em>, where I check to see that end condition we expected has been fulfilled:</p>
+{% highlight csharp %}
+    var selectionThenAction = new ITreeNode[] {
+        m_selNode, actionNode };
+    Assert.IsEqualSequence(m_path, selectionThenAction);
+{% endhighlight %}
+<p>Here I construct what I expect the path to be, and assert that it matches the actual path using an Assert library provided by UnTest.</p>
+<p>By following this layout, all tests can be easily scanned. When time comes to fix or update a test, developers can dive in quickly.</p>
+<p>You&#8217;ll notice I could compact the Assert section into one line:</p>
+{% highlight csharp %}
+    Assert.IsEqualSequence(m_path, new ITreeNode[] { m_selNode, actionNode });
+{% endhighlight %}
+<p>The reason I keep it separate is to avoid &#8220;magic numbers&#8221;. It&#8217;s too easy to write code like, <em>Assert.IsEqual(result, 5)</em>. The writer may know what this 5 means, but it would be much better for future readers to put it in a named variable and write <em>Assert.IsEqual(result, hypotenuseLength)</em>.</p>
+<p>Now this test is as readable as possible, how did I make it <strong>maintainable</strong> too? You&#8217;ll notice that by improving readability I&#8217;ve gone some way to also helping maintainability, as something that&#8217;s easier to read is also easier to understand, and therefore is easier to maintain. But there are other things I do as well.</p>
+<p>Check out the first line:</p>
+{% highlight csharp %}
+    var actionNode = FakeAction.CreateStub();
+{% endhighlight %}
+<p>I need an action to put into the selection node. I could use an existing IAction concrete class, but then any bugs in that concrete class might cause this test to fail. I&#8217;ll cover more why that&#8217;s bad later, but just pretend it sucks.</p>
+<p>I could derive a new class from IAction, which I could keep simple enough to avoid bugs, but then I&#8217;d have to maintain that whenever the Action class interface changed. It&#8217;s much easier to use a &#8220;mocking framework&#8221; to do most of the hard work for me.</p>
+<p>A mocking framework is a library that can be used to construct a new type at runtime that derives from Action and just does the right thing (among many other things). Then any changes are picked up for me automatically, and I have less code to maintain. If that sounds like magic, that&#8217;s because it is.</p>
+<p>There&#8217;s a mocking framework behind that FakeAction.CreateStub() call, but since it&#8217;s such a common use case in this test suite I&#8217;ve wrapped it up in a helper function.</p>
+<p>Any mocking framework that works with mono will work with Unity3D. I use Moq. The latest version is <a href="https://www.nuget.org/packages/moq">here</a>. I&#8217;ve mirrored this in a unitypackage <a href="https://github.com/tenpn/moq-unitypackage">here</a> for easy importing to Unity.</p>
+<p>To further isolate myself from changes, I&#8217;m constructing the member variables <em>m_selNode</em> and <em>m_path</em> in a setup function (not shown). This function is run automatically before every test, and makes new SelectionNode and Path objects. This is not only handy, because they&#8217;re used in every test in the class, but also isolates the unit tests from changes to the constructor signatures. Other commonly-used functions can also be hidden behind helper functions, but it&#8217;s best not to hide your function-under-test for readability reasons.</p>
+<p>The final thing I need to do is make the test <strong>&#8220;trustworthy&#8221;</strong>.</p>
+<p>By going through the maintainable and readable steps, I&#8217;ve made sure this test depends on the minimum amount of game code. When this test fails, hopefully it will only be because the function under test, UpdatePath(), had an error.</p>
+<p>The more game code you depend on, the closer your test slips along the spectrum from unit to integration test. Integration tests check how systems connect together, rather than single assumptions. They have their place in a testing plan, but here I&#8217;m trying to write a unit test. A great rule of thumb is that a single line of buggy code should cause failures in the minimum of unit tests, and ideally only one. If lots fail, that&#8217;s because the code isn&#8217;t isolated properly and you&#8217;ve ended up with some integration tests.</p>
+<p>Some of my early unit tests, from F1 2011, created a whole world for the AI to move in and recorded the results, rather than mocking surrounding code like we have here. The end result was that a single bug in the world code could cause many many tests to fail. That makes it hard to track down the root cause of the bug, and meant I had probably written integration tests instead of unit tests.</p>
+<p>When this test does fail, it will be deterministic. There&#8217;s no dependency here on databases, network services, or random number generators. There&#8217;s nothing worse than unit tests that fail once in a blue moon, because they erode developer trust in the test suite. That&#8217;s how you end up with swathes of tests commented out, and wasted engineering time.</p>
+<p>&#8212;</p>
+<p>Now you understand why I&#8217;ve written this real-life unit test in this way, and why it&#8217;s important your unit tests are readable, maintainable and trustworthy. Like any type of programming, writing good unit tests takes practice and perseverance. They&#8217;re truly the foundation of your project, giving you the freedom to restructure at will and the confidence that your game code is high quality. But like any foundation, if they&#8217;re not well engineered the whole edifice comes rapidly crumbling down. Take the time to follow up with the resources I linked above, and you will hopefully avoid that situation.</p>

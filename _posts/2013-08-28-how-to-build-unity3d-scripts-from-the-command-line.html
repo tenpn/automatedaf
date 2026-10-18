@@ -1,0 +1,32 @@
+---
+layout: post
+title: "How to build Unity3D scripts from the command line"
+date: 2013-08-28 16:39:52 +0000
+categories: [Build Engineering]
+original_url: https://andrewfray.wordpress.com/2013/08/28/how-to-build-unity3d-scripts-from-the-command-line/
+---
+
+<p>I use emacs for day-to-day programming, including writing unity scripts. For a while I made changes then tabbed over to the unity editor to watch them compile and check for errors. This was, imaginably, tedious. Anyone not coding in MonoDevelop has the same issue, and even the MonoDevelop folks (god have mercy upon their souls) have issues.</p>
+<p>It turns out there are multiple ways to compile your unity scripts from the command line, in such a way that most editors can be told to do it and parse the output for errors, greatly speeding up iteration time. I don&#8217;t think there&#8217;s anything new here, I&#8217;m just collating information that seems spread out across the net like horcruxes.</p>
+<p>The first way to build your script files is the easiest to get working, but is cumbersome and slow. We&#8217;ll just pass a range of cryptic command line arguments to our Unity executable, it&#8217;ll launch without an editor front end, compile the scripts, dump any errors to the console, and quit. Cue up some regex and your editor can pull in the errors. Here is the command:</p>
+{% highlight plaintext %}
+    path/to/unity -batchmode -logFile -projectPath path/to/project/dir -quit
+{% endhighlight %}
+<p>On OSX you can find the unity executable at <code>/Applications/Unity/Unity.app/Contents/MacOS/Unity</code>.</p>
+<p>You can read more about unity command line arguments in the <a href="http://docs.unity3d.com/Documentation/Manual/CommandLineArguments.html">unity docs</a>, but let&#8217;s go through the options here:</p>
+<ul>
+<li><em>-batchmode</em>: stops any front end from loading</li>
+<li><em>-logFile</em>: tells unity what to do with any output. Without this parameter it&#8217;s all thrown away, which is of no use to our text editors. The docs above will tell you this argument needs a file parameter, but it&#8217;s undocumented that if you omit the parameter, all output, including errors, gets spat out to the terminal. That&#8217;s just what we want!</li>
+<li><em>-projectPath</em>: the path to the root of your project, where you find the sln file and the Assets directory</li>
+<li><em>-quit</em>: tells unity to exit straight after compiling.</li>
+</ul>
+<p>This works on every platform, and has the nice feature of pulling in new files before compiling, so we don&#8217;t need a separate step for that. However it is slow as a milk cart going uphill, because it has to load and boot a lot of the unity runtime before it can do the simple thing of finding mono and asking it to compile a solution file for us.</p>
+<p>It is also annoying because it doesn&#8217;t work if the unity editor is currently open. Even when in a heavy coding session there&#8217;s normally a need to run the game or tweak inspector values at regular intervals, and opening and closing the editor is not going to help you stay in a nice flow. Having said that, this drawback might not matter on a continuous integration server, so it might be the way to go.</p>
+<p>So since this is just asking mono to compile for us in a round-about way, how do we cut out the middle man? The mono command-line compilation tool is called <em>mdtool</em>, and it ships with Unity. On OSX you can find it at <code>/Applications/Unity/MonoDevelop.app/Contents/MacOS/mdtool</code>. Here&#8217;s the command to give it:</p>
+{% highlight plaintext %}
+    path/to/mdtool build path/to/project/project.sln
+{% endhighlight %}
+<p>Here we just need to give mdtool the command <em>build</em>, and the path to the sln file. This is super-quick compared to the Unity approach, and works with the editor still open, but unfortunately won&#8217;t pick up newly added files. You&#8217;ll still have to tab to the editor for those to be picked up. However that&#8217;s relatively uncommon, so isn&#8217;t too much of a bother.</p>
+<p>However when I tried this with the mdtool that ships with unity, I got very strange errors. They used to be relatively compact, but nowadays there are segfaults and all kinds of stuff going on. I did some casual googling over a few weeks, and couldn&#8217;t find a solution. But there was a workaround: install the latest <a href="http://xamarin.com/studio">Xamarin Studio</a> (a free mono dev environment based on MonoDevelop), and use its mdtool. On OSX that&#8217;s at <code>/Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool</code>.</p>
+<p>So there you go: with one of these two approaches, you should be able to compile your unity scripts on the command line, find the errors and connect them to your editor of choice. These should all work on windows as well, but if someone can confirm in the comments that would be great.</p>
+<p>If you&#8217;re interested, my emacs unity helper functions, including some flycheck compilers using both mdtool and unity, can be found on <a href="https://github.com/tenpn/dotfiles/blob/master/unity-csharp.el">github</a>.</p>

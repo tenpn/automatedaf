@@ -1,0 +1,134 @@
+---
+layout: post
+title: "Running unity tests on a build server"
+date: 2020-09-27 09:05:46 +0000
+description: "(Read part 1, about creating parametric level smoke tests, here) Now we have some useful tests, we want
+our Jenkins install to run them frequently. That way, we really quick feedback on failures. Here’s how we do this at
+Roll7. Running tests from the command line Let’s assume you already have a server to build"
+categories: [Build Engineering]
+original_url: https://andrewfray.wordpress.com/2020/09/27/running-unity-tests-on-a-build-server/
+---
+
+<p class="wp-block-paragraph">(<a href="/2020/09/12/smoke-testing-scenes-using-jenkins-and-unity-test-framework/">Read
+        part 1, about creating parametric level smoke tests, here</a>)</p>
+
+
+
+<p class="wp-block-paragraph">Now we have some useful tests, we want our <a href="https://www.jenkins.io/">Jenkins</a>
+    install to run them frequently. That way, we really quick feedback on failures. Here’s how we do this at <a
+        href="https://www.roll7.co.uk">Roll7</a>. </p>
+
+
+
+<h2 class="wp-block-heading">Running tests from the command line</h2>
+
+
+
+<p class="wp-block-paragraph">Let’s assume you already have a server to build your game. I won’t cover how to set up a
+    unity Jenkins build server here, except to say that the <a href="https://plugins.jenkins.io/unity3d-plugin/">Unity3d
+        plugin</a> is very helpful when you have lots of unity versions. (Although we couldn’t get the log parameter to
+    be picked up <strong>unless</strong> we specified the path fully in our command line arguments!)</p>
+
+
+
+<p class="wp-block-paragraph">The command line to run a Unity Test Framework job is as follows:</p>
+
+
+
+{% highlight plaintext %}
+-batchmode -projectPath "." -runTests -testResults playmodetests.xml -testPlatform playmode -logFile ${WORKSPACE}\playtestlog.txt
+{% endhighlight %}
+
+
+
+<p class="wp-block-paragraph">You can read more <a
+        href="https://docs.unity3d.com/Manual/CommandLineArguments.html">about command line params here</a>, but
+    let&#8217;s break that down:</p>
+
+
+
+<ul class="wp-block-list">
+    <li><code>-batchmode</code> tells unity not to open a GUI, which is vital for a build server. We don&#8217;t want it
+        to hang on a dialog! You can also use <code>Application.isBatchMode</code> to test for this flag in your code.
+    </li>
+    <li><code>-projectPath "."</code> just tells unity to load the project in our working directory</li>
+    <li><code><a href="https://docs.unity3d.com/Packages/com.unity.test-framework@1.1/manual/reference-command-line.html">-runTests</a></code>
+        starts a Unity Test Framework job as soon as the editor loads. It&#8217;ll run some specified tests, spit out
+        some output, and make sure test failures cause a non-zero return code.</li>
+    <li><code>-testPlatform playmode</code> tells the UTF to run our playmode tests, which are the ones we care about
+        for this blog post. You can also use <code>editmode</code>.</li>
+    <li><code>-testResults playmodetests.xml</code> states where to spit out a report of the run, which will include
+        failures as well as logs. The report is formatted as an <a
+            href="https://docs.nunit.org/articles/nunit/technical-notes/usage/Test-Result-XML-Format.html">nunit test
+            result XML</a>. Jenkins has a <a href="https://plugins.jenkins.io/nunit/">plugin </a>that can fail a job
+        based on this file, and present a nice reporting UI.</li>
+    <li><code>-logFile ${WORKSPACE}\playtest.txt</code> specifies where to write the editor log &#8211; by default it
+        won&#8217;t stream into the console. The ${WORKSPACE} is a jenkins environment variable, and we found specifying
+        it was the only way to get the unity3d plugin to find the log.</li>
+</ul>
+
+
+
+<p class="wp-block-paragraph">&#8230;And that&#8217;s enough to do a test run. </p>
+
+
+
+<h2 class="wp-block-heading">Playmode tests in batch</h2>
+
+
+
+<p class="wp-block-paragraph"><a href="https://docs.unity3d.com/Manual/CLIBatchmodeCoroutines.html">This page</a> of the
+    docs mentions that the WaitForEndOfFrame coroutine is a bad idea in batch mode. This is because &#8220;systems like
+    animation, physics and timeline might not work correctly in the Editor&#8221;. </p>
+
+
+
+<p class="wp-block-paragraph">There&#8217;s not much more detail than this! </p>
+
+
+
+<p class="wp-block-paragraph">In practice, we&#8217;ve found any playmode tests that depend on movement, positioning or
+    animation fails pretty reliably. We get around this by explicitly marking tests we know can run on the server with
+    the <code>[Category("BuildServer")]</code> attribute. We can then use the <code>-testCategory "BuildServer"</code>
+    parameter to only run these tests.</p>
+
+
+
+<p class="wp-block-paragraph">This is pretty limiting! But there&#8217;s still plenty of value in just making sure your
+    levels, enemies and weapons work without firing errors or warnings. </p>
+
+
+
+<p class="wp-block-paragraph">In the near future we&#8217;ll be experimenting with an ec2 instance that has a GPU, to
+    let us run <em>without</em> batchmode, and also allow us to run playmode tests on finished builds more easily. </p>
+
+
+
+<h2 class="wp-block-heading">Gotchas and practicalities</h2>
+
+
+
+<ul class="wp-block-list">
+    <li>Currently, we find a full playmode test run is exceedingly slow, and we don&#8217;t yet know why. What takes a
+        minute or two locally takes tens of minutes on the ec2 instance. It&#8217;s not a small instance, either! So
+        we&#8217;re only scheduling a test run for our twice-daily steam builds, instead of for every push.</li>
+    <li>WaitForEndOfFrame <a href="https://docs.unity3d.com/Manual/CLIBatchmodeCoroutines.html">doesn&#8217;t work in
+            batch mode</a>, so beware of using that in your tests, or anything your tests depend on. </li>
+    <li>The vagaries of unity&#8217;s compile step mean that some sometimes you can get out-of-date OnValidate calls
+        running on new data as you open the editor. Maybe this is fixable with properly defined assemblies, but we
+        hackily get around it by doing a dummy build right at the start of the jenkins job. It goes as far as setting
+        the correct platform, waits for all the compiles, and quits. Compile errors still cause failures, which is good.
+    </li>
+    <li>If you want editmode and playmode tests in the same job, just run the editor twice. We do this with two
+        different testResults xmls, and we can use a wildcard in the nunit jenkins plugin to pick up both.</li>
+    <li>To test your command line in dos, use the start command:
+        <code>start /wait "" "path to unity.exe" -batchmode ...</code> The extra empty spaces are important if your
+        unity path has spaces in it too. To see the last command&#8217;s return code in dos, use
+        <code>echo %ERRORLEVEL%</code>. </li>
+    <li>These are running playmode tests in the editor on the build server. We haven&#8217;t yet got around to making
+        playmode tests work in a build. That might end up as a follow-up post!</li>
+</ul>
+
+
+
+<p class="wp-block-paragraph"></p>

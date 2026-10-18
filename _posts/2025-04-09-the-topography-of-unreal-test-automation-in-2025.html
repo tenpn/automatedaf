@@ -1,0 +1,243 @@
+---
+layout: post
+title: "The Topography of Unreal Test Automation in 2025"
+date: 2025-04-09 15:09:56 +0000
+image: /images/blog/2025/04/unreal-functional-test-blueprint.png
+image_fit: contain
+categories: [Test Automation]
+original_url: https://andrewfray.wordpress.com/2025/04/09/the-topography-of-unreal-test-automation-in-2025/
+---
+
+<p class="wp-block-paragraph">I&#8217;ve been exploring automated testing more in Unreal recently, and one thing that won&#8217;t surprise Unreal users is there&#8217;s a million different ways to do it, each with their pros and cons, and half of them are undocumented. I thought I could do a useful overview of the different automated testing tools at your disposal in Unreal 5.5. </p>
+
+
+
+<p class="wp-block-paragraph">This isn&#8217;t a tutorial, it&#8217;s not even a fully-fleshed out blog post, but enough for you to get a feel for things and start your own research.</p>
+
+
+
+<h2 class="wp-block-heading">Map Check</h2>
+
+
+
+<figure><img loading="lazy" width="231" height="86" src="/images/blog/2025/04/unreal-map-check-menu-item.png" alt="The Map Check item highlighted under the Verification section of an Unreal editor menu" /></figure>
+
+
+
+<p class="wp-block-paragraph">An easy-to-extend tool for validating the setup of an individual map at edit or build time. Run via Build &gt; Map Check. </p>
+
+
+
+<p class="wp-block-paragraph">If you have custom actors that can validate their own internals, you can add to map check by overriding <a href="https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/GameFramework/AActor/CheckForErrors">CheckForErrors()</a>. For instance, making sure weapon pickups are on the correct layer.</p>
+
+
+
+<p class="wp-block-paragraph">You could also create a custom map check actor whose only job is to find other actors in the scene and validate their setup &#8211; for instance, making sure there&#8217;s only one player spawn point, or that no static mesh actor has missing materials. </p>
+
+
+
+<p class="wp-block-paragraph">Map checks don&#8217;t run on save, so it can be easy to work on a scene and commit it in a broken state. They&#8217;re also very coarse &#8211; you run all map checks in a level, or none. There&#8217;s no popups on running the map check from the menu, output is just sent to the Message Log, making it easy to miss. </p>
+
+
+
+<h2 class="wp-block-heading">Asset Data Validation</h2>
+
+
+
+<figure><img loading="lazy" width="376" height="114" src="/images/blog/2025/04/unreal-validate-data-menu-item.png" alt="The Validate Data... item highlighted under the DataValidation section of an Unreal editor menu" /></figure>
+
+
+
+<p class="wp-block-paragraph">A more complicated mechanism than Map Check, but extends edit-time validation to all UObjects. Some actual documentation exists for this: <a href="https://dev.epicgames.com/documentation/en-us/unreal-engine/data-validation-in-unreal-engine">https://dev.epicgames.com/documentation/en-us/unreal-engine/data-validation-in-unreal-engine</a> </p>
+
+
+
+<p class="wp-block-paragraph">You can either validate an entire project through Tools &gt; Validate Data, or you can right-click on individual assets/folders in the content browser to validate them (Asset Actions &gt; Validate Assets). </p>
+
+
+
+<p class="wp-block-paragraph">You can add validation to a custom UObject that overrides IsDataValid() to validate itself. For instance, a Data Asset could make sure that its parameters have sensible values.</p>
+
+
+
+<p class="wp-block-paragraph">You can also create a UEditorValidatorBase responsible for finding other UObjects and validating them. One obvious synergy with Map Check is to create a validator base that finds all levels and makes sure they have exactly 1 custom map check actor.</p>
+
+
+
+<p class="wp-block-paragraph">Asset Data Validation gives you a popup while it&#8217;s working, and sends output to the Asset Check tab of the Message Log. It runs on save, and things like Data Assets give you a nice visual warning that they&#8217;re in a bad state. </p>
+
+
+
+<h2 class="wp-block-heading">Automation Framework</h2>
+
+
+
+<figure><img loading="lazy" width="1024" height="671" src="/images/blog/2025/04/unreal-session-frontend-automation-tab.png" alt="Unreal Session Frontend window on the Automation tab, with the Project test group expanded down to an Add_ZeroVectors_Zero unit test" /></figure>
+
+
+
+<p class="wp-block-paragraph">The <a href="https://dev.epicgames.com/documentation/en-us/unreal-engine/create-automation-tests-in-unreal-engine">automation framework</a> is the base runtime for a few different automation systems. You&#8217;ll access all of them through Tools &gt; Session Frontend &gt; Automation. </p>
+
+
+
+<p class="wp-block-paragraph">This is an annoying window for the local automated tester! It&#8217;s designed for running large-scale tests across multiple machines, and the workflow of wanting to iterate on some local tests before committing is not really considered. Larger projects should consider writing their own simple frontend. </p>
+
+
+
+<p class="wp-block-paragraph">I at least recommend you put your project&#8217;s tests in a folder named _AA or something, to make sure they&#8217;re at the top of the list!  </p>
+
+
+
+<h2 class="wp-block-heading">Automation Framework: Automation Tests</h2>
+
+
+
+{% highlight cpp %}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPlaceholderTest, "TestGroup.TestSubgroup.Placeholder Test", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FPlaceholderTest::RunTest(const FString& Parameters)
+{
+	// Make the test pass by returning true, or fail by returning false.
+	return true;
+}
+{% endhighlight %}
+
+
+
+<p class="wp-block-paragraph">This is the base layer runtime &#8211; everything else just provides wrappers around <a href="https://dev.epicgames.com/documentation/en-us/unreal-engine/write-cplusplus-tests-in-unreal-engine">automation tests</a>. It&#8217;s a C++ macro-heavy library that won&#8217;t be too unfamiliar to people who have used something like googletest, but it has some severe limitations, not least of which is the lack of before/after helper functions. </p>
+
+
+
+<p class="wp-block-paragraph">You can however write some form of parameterised tests, using the Complex Test helpers. This is very handy for asset validation. </p>
+
+
+
+<p class="wp-block-paragraph">To write multi-frame tests, you can use the Latent Command system to essentially queue lambdas, however it is quite verbose. </p>
+
+
+
+<p class="wp-block-paragraph">In my experience I think it&#8217;s best to understand automation tests, but then mostly use one of the other frameworks. </p>
+
+
+
+<h2 class="wp-block-heading">Automation Framework: Functional Tests (Blueprint)</h2>
+
+
+
+<figure><img loading="lazy" width="786" height="223" src="/images/blog/2025/04/unreal-functional-test-blueprint.png" alt="Unreal blueprint graph where OnTestStart (FunctionalTest1) calls Log Message, then Finish Test with Test Result set to Succeeded" /></figure>
+
+
+
+<p class="wp-block-paragraph"><a href="https://dev.epicgames.com/documentation/en-us/unreal-engine/functional-testing-in-unreal-engine">This library</a> allows you to write tests in blueprint. &#8220;Functional&#8221; is in its name, but there&#8217;s not much stopping you from writing low-level unit tests in this &#8211; the only factor is, can you access what you need from blueprint? </p>
+
+
+
+<p class="wp-block-paragraph"><a href="https://www.youtube.com/watch?v=KmaGxprTUfI">Jessica Baker&#8217;s Unreal Fest talk about automation in Sea of Thieves</a> is a great starting point not only for people interested in the practice, but also anyone who wants to know more about the Functional Tests library, and how Rare use it to write Actor Tests.</p>
+
+
+
+<p class="wp-block-paragraph">It&#8217;s also straightforward to use functional blueprint (or even python) tests to <a href="https://dev.epicgames.com/documentation/en-us/unreal-engine/write-editor-tests-with-utility-blueprints-in-unreal-engine">write editor tests</a>. People often forget about testing your tools! </p>
+
+
+
+<h2 class="wp-block-heading">Automation Framework: Spec</h2>
+
+
+
+{% highlight cpp %}
+BEGIN_DEFINE_SPEC(MyCustomSpec, "MyGame.MyCustomClass", EAutomationTestFlags::ProductFilter | EAutomationTestFlags::ApplicationContextMask)
+	TSharedPtr<FMyCustomClass> CustomClass;
+END_DEFINE_SPEC(MyCustomSpec)
+void MyCustomSpec::Define()
+{
+	Describe("Execute()", [this]()
+	{
+		It("should return true when successful", [this]()
+		{
+			TestTrue("Execute", CustomClass->Execute());
+		});
+		It("should return false when unsuccessful", [this]()
+		{
+			TestFalse("Execute", CustomClass->Execute());
+		});
+	});
+}
+{% endhighlight %}
+
+
+
+<p class="wp-block-paragraph"><a href="https://dev.epicgames.com/documentation/en-us/unreal-engine/automation-spec-in-unreal-engine">Spec</a> is a BDD-focused library, but if that acronym means nothing to you, the only thing you have to contend with is the slightly odd naming scheme and the way tests can nest. </p>
+
+
+
+<p class="wp-block-paragraph">The advantages of Spec is that it&#8217;s relatively easy to write parametric tests, and that you can use a proper fixture with BeforeEach/AfterEach functions. It is also somewhat easier to write asynchronous tests, either in a pool or by building latent actions, but it&#8217;s still far from fluent.</p>
+
+
+
+<p class="wp-block-paragraph">The big drawback of Spec in my eyes is that there&#8217;s no BeforeAll/AfterAll! You can work around this in the BeforeEach to make sure (eg) you only load an asset if it&#8217;s not currently loaded, but I have not yet found a good way to know if it&#8217;s safe to skip unloading in the AfterEach. </p>
+
+
+
+<p class="wp-block-paragraph">I like to use Spec to write asset tests, rather than the Asset Data Validation system, so I have more control over what tests are running, and get more useful information in the output. I would even use it for validating maps, as it&#8217;s relatively straightforward </p>
+
+
+
+<h2 class="wp-block-heading">Automation Framework: CQTest</h2>
+
+
+
+{% highlight cpp %}
+TEST_CLASS(LatentActionTest, "Game.Test") 
+{
+	uint32 calls = 0;
+
+	BEFORE_EACH() 
+	{
+		AddCommand(new FExecute([&]() { calls++; }));
+	}
+
+	AFTER_EACH() 
+	{
+		AddCommand(new FExecute([&]() { calls++; })); // executed after the next line, as it is a latent action
+		ASSERT_THAT(AreEqual(2, calls));
+	}
+
+	TEST_METHOD(PerformLatentAction) 
+	{
+		ASSERT_THAT(AreEqual(1, calls));
+		AddCommand(new FExecute([&]() { calls++; }));
+	}
+};
+{% endhighlight %}
+
+
+
+<p class="wp-block-paragraph"><a href="https://dev.epicgames.com/documentation/en-us/unreal-engine/cqtest-test-framework-for-unreal-engine">CQTest</a> is relatively new, and is an upstream merge of the system Rare built for Sea of Thieves. It&#8217;s a much more accessible general c++ testing library than the base automation system, including fixtures, before/after each/all, and even better access to running latent asynchronous commands through the command builder. It also comes with a suite of helpers to help you enter PIE and spawn objects. </p>
+
+
+
+<p class="wp-block-paragraph">It&#8217;s very good for writing gameplay tests of all scopes, from unit to functional, but two things are holding it back right now:</p>
+
+
+
+<p class="wp-block-paragraph">Firstly the documentation is early and limited. In fact, the best documentation is the Lyra starter project, which has a <a href="https://github.com/EpicGames/UnrealEngine/blob/2d53fcab0066b1f16dd956b227720841cad0f6f7/Samples/Games/Lyra/Plugins/GameFeatures/ShooterTests/README.md">readme and lots of examples</a>. In fact, I often find the best way to learn about unreal features of any kind is a GitHub search to view example code. </p>
+
+
+
+<p class="wp-block-paragraph">Secondly, I&#8217;m yet to figure out a way to do parametric tests with CQTest. Which means it&#8217;s unsuitable for asset tests or fuzz testing or many other situations. It&#8217;s a shame, because if you could have the parametric tests from Spec, and the Before/AfterAll from CQTest, you&#8217;d have the perfect library for building unreal asset tests!</p>
+
+
+
+<h2 class="wp-block-heading">Yet More Systems</h2>
+
+
+
+<p class="wp-block-paragraph"><a href="https://dev.epicgames.com/documentation/en-us/unreal-engine/gauntlet-automation-framework-in-unreal-engine">Gauntlet</a> is a system for orchestrating tests across multiple runs, which seems particularly suitable for multiplayer games. I&#8217;ve not used it much in anger to comment about it. </p>
+
+
+
+<p class="wp-block-paragraph"><a href="https://dev.epicgames.com/documentation/en-us/unreal-engine/low-level-tests-in-unreal-engine">Low Level Tests</a> are a new paradigm in Unreal, built upon Catch2, a general-purpose open source C++ test library, is now integrated in Unreal 5. I&#8217;ve used Catch2 in c++ projects and like it, but not sure yet where it fits into the Unreal ecosystem. </p>
+
+
+
+<p class="wp-block-paragraph">I hope you find this overview useful &#8211; if there&#8217;s things I&#8217;ve overlooked, let me know in the comments!</p>

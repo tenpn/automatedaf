@@ -1564,7 +1564,8 @@ section:last-child,
   padding: 0 45px;
   outline: 0;
   border-radius: 10px;
-  box-shadow: inset 0px 0px 0px 1px rgba(0, 0, 0, 0.75),
+  box-shadow:
+    inset 0px 0px 0px 1px rgba(0, 0, 0, 0.75),
     inset 0px 2px 0px 0px rgba(255, 192, 192, 0.5),
     inset 0px 0px 0px 2px rgba(19, 111, 99, 0.85),
     3px 3px 3px 1px rgba(0, 0, 0, 0.15);
@@ -1577,7 +1578,8 @@ section:last-child,
   background-image: -ms-linear-gradient(top, #ff9f12, #e28f21);
   background-image: linear-gradient(top, #ff9f12, #e28f21);
   background-color: #ff9f12;
-  box-shadow: inset 0px 0px 0px 1px rgba(0, 0, 0, 0.75),
+  box-shadow:
+    inset 0px 0px 0px 1px rgba(0, 0, 0, 0.75),
     inset 0px 2px 0px 0px rgba(255, 192, 192, 0.5),
     inset 0px 0px 0px 2px rgba(19, 111, 99, 0.85),
     3px 3px 3px 1px rgba(0, 0, 0, 0.15);
@@ -1589,7 +1591,8 @@ section:last-child,
   background-image: -ms-linear-gradient(top, #d38310, #ffa62b);
   background-image: linear-gradient(top, #d38310, #ffa62b);
   background-color: #d38310;
-  box-shadow: inset 0px 0px 0px 1px rgba(0, 0, 0, 0.75),
+  box-shadow:
+    inset 0px 0px 0px 1px rgba(0, 0, 0, 0.75),
     inset 0px 2px 0px 0px rgba(255, 192, 192, 0.5),
     inset 0px 0px 0px 2px rgba(19, 111, 99, 0.85),
     3px 3px 3px 1px rgba(0, 0, 0, 0.15);
@@ -1808,35 +1811,33 @@ section:last-child,
 /* Post content (imported WordPress markup) */
 
 #content .post-content img,
-#content .post-content iframe,
 #content .post-content video {
   max-width: 100%;
   height: auto;
 }
 
+#content .post-content iframe {
+  max-width: 100%;
+}
+
+#content .post-content iframe.youtube-player {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+}
+
 #content .post-content figure {
   margin: 0 0 2em 0;
+  text-align: center;
 }
 
 #content .post-content figure img {
   display: block;
+  margin: 0 auto;
   height: auto;
 }
 
-#content .post-content .aligncenter,
-#content .post-content figure.aligncenter {
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
-}
-
-#content .post-content .aligncenter img {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-#content .post-content figcaption,
-#content .post-content .wp-element-caption {
+#content .post-content figcaption {
   color: #96a9b5;
   font-size: 0.9em;
   line-height: 1.5em;
@@ -1853,16 +1854,41 @@ section:last-child,
   padding: 0.1em 0.35em;
 }
 
+#content .post-content ul,
+#content .post-content ol {
+  margin: 0 0 2em 1.5em;
+}
+
+#content .post-content ul {
+  list-style: disc;
+}
+
+#content .post-content ol {
+  list-style: decimal;
+}
+
+#content .post-content li {
+  padding-left: 0.25em;
+}
+
 #content .post-content pre {
+  font-family: "Menlo", "Consolas", "Liberation Mono", monospace;
+  font-size: 0.7em;
+  background: #f7f7f7;
+  border: solid 1px #e2e6e8;
+  border-radius: 3px;
   margin: 0 0 2em 0;
+  padding: 1em 1.25em;
+  line-height: 1.6em;
+  overflow-x: auto;
+  white-space: pre;
 }
 
 #content .post-content pre code {
-  display: block;
-  overflow-x: auto;
-  white-space: pre;
-  padding: 1em 1.25em;
-  line-height: 1.6em;
+  font-size: 1em;
+  background: none;
+  border: 0;
+  padding: 0;
 }
 
 #content .post-origin {
@@ -1875,6 +1901,170 @@ section:last-child,
 
 #content .post-origin p {
   margin: 0;
+}
+
+/* Syntax highlighting (Rouge, github.light theme; regenerate with: bundle exec rougify style github.light) */
+
+#content .post-content figure.highlight {
+  text-align: left;
+  margin: 0 0 2em 0;
+}
+
+#content .post-content figure.highlight pre {
+  margin: 0;
+}
+
+#content .post-content .highlight,
+#content .post-content .highlight .w {
+  color: #24292f;
+}
+#content .post-content .highlight .k,
+#content .post-content .highlight .kd,
+#content .post-content .highlight .kn,
+#content .post-content .highlight .kp,
+#content .post-content .highlight .kr,
+#content .post-content .highlight .kt,
+#content .post-content .highlight .kv {
+  color: #cf222e;
+}
+#content .post-content .highlight .gr {
+  color: #f6f8fa;
+}
+#content .post-content .highlight .gd {
+  color: #82071e;
+  background-color: #ffebe9;
+}
+#content .post-content .highlight .nb {
+  color: #953800;
+}
+#content .post-content .highlight .nc {
+  color: #953800;
+}
+#content .post-content .highlight .no {
+  color: #953800;
+}
+#content .post-content .highlight .nn {
+  color: #953800;
+}
+#content .post-content .highlight .sr {
+  color: #116329;
+}
+#content .post-content .highlight .na {
+  color: #116329;
+}
+#content .post-content .highlight .nt {
+  color: #116329;
+}
+#content .post-content .highlight .gi {
+  color: #116329;
+  background-color: #dafbe1;
+}
+#content .post-content .highlight .ges {
+  font-weight: bold;
+  font-style: italic;
+}
+#content .post-content .highlight .kc {
+  color: #0550ae;
+}
+#content .post-content .highlight .l,
+#content .post-content .highlight .ld,
+#content .post-content .highlight .m,
+#content .post-content .highlight .mb,
+#content .post-content .highlight .mf,
+#content .post-content .highlight .mh,
+#content .post-content .highlight .mi,
+#content .post-content .highlight .il,
+#content .post-content .highlight .mo,
+#content .post-content .highlight .mx {
+  color: #0550ae;
+}
+#content .post-content .highlight .sb {
+  color: #0550ae;
+}
+#content .post-content .highlight .bp {
+  color: #0550ae;
+}
+#content .post-content .highlight .ne {
+  color: #0550ae;
+}
+#content .post-content .highlight .nl {
+  color: #0550ae;
+}
+#content .post-content .highlight .py {
+  color: #0550ae;
+}
+#content .post-content .highlight .nv,
+#content .post-content .highlight .vc,
+#content .post-content .highlight .vg,
+#content .post-content .highlight .vi,
+#content .post-content .highlight .vm {
+  color: #0550ae;
+}
+#content .post-content .highlight .o,
+#content .post-content .highlight .ow {
+  color: #0550ae;
+}
+#content .post-content .highlight .gh {
+  color: #0550ae;
+  font-weight: bold;
+}
+#content .post-content .highlight .gu {
+  color: #0550ae;
+  font-weight: bold;
+}
+#content .post-content .highlight .s,
+#content .post-content .highlight .sa,
+#content .post-content .highlight .sc,
+#content .post-content .highlight .dl,
+#content .post-content .highlight .sd,
+#content .post-content .highlight .s2,
+#content .post-content .highlight .se,
+#content .post-content .highlight .sh,
+#content .post-content .highlight .sx,
+#content .post-content .highlight .s1,
+#content .post-content .highlight .ss {
+  color: #0a3069;
+}
+#content .post-content .highlight .nd {
+  color: #8250df;
+}
+#content .post-content .highlight .nf,
+#content .post-content .highlight .fm {
+  color: #8250df;
+}
+#content .post-content .highlight .err {
+  color: #f6f8fa;
+  background-color: #82071e;
+}
+#content .post-content .highlight .c,
+#content .post-content .highlight .ch,
+#content .post-content .highlight .cd,
+#content .post-content .highlight .cm,
+#content .post-content .highlight .cp,
+#content .post-content .highlight .cpf,
+#content .post-content .highlight .c1,
+#content .post-content .highlight .cs {
+  color: #6e7781;
+}
+#content .post-content .highlight .gl {
+  color: #6e7781;
+}
+#content .post-content .highlight .gt {
+  color: #6e7781;
+}
+#content .post-content .highlight .ni {
+  color: #24292f;
+}
+#content .post-content .highlight .si {
+  color: #24292f;
+}
+#content .post-content .highlight .ge {
+  color: #24292f;
+  font-style: italic;
+}
+#content .post-content .highlight .gs {
+  color: #24292f;
+  font-weight: bold;
 }
 
 /* Blog index */
@@ -2169,7 +2359,8 @@ section:last-child,
     z-index: 10001;
     color: #fff;
     background: url("images/bg04.jpg");
-    box-shadow: inset 0px -20px 70px 0px rgba(200, 220, 245, 0.1),
+    box-shadow:
+      inset 0px -20px 70px 0px rgba(200, 220, 245, 0.1),
       inset 0px -1px 0px 0px rgba(255, 255, 255, 0.1),
       0px 1px 7px 0px rgba(0, 0, 0, 0.6);
     text-shadow: -1px -1px 1px rgba(0, 0, 0, 0.75);
@@ -2199,7 +2390,8 @@ section:last-child,
     left: 6px;
     color: #fff;
     background: rgba(255, 255, 255, 0.025);
-    box-shadow: inset 0px 1px 0px 0px rgba(255, 255, 255, 0.1),
+    box-shadow:
+      inset 0px 1px 0px 0px rgba(255, 255, 255, 0.1),
       inset 0px 0px 0px 1px rgba(255, 255, 255, 0.05),
       inset 0px -8px 10px 0px rgba(0, 0, 0, 0.15),
       0px 1px 2px 0px rgba(0, 0, 0, 0.25);
@@ -2247,7 +2439,8 @@ section:last-child,
     width: 275px;
     z-index: 10002;
     background: url("images/bg04.jpg");
-    box-shadow: inset -1px 0px 0px 0px rgba(255, 255, 255, 0.25),
+    box-shadow:
+      inset -1px 0px 0px 0px rgba(255, 255, 255, 0.25),
       inset -2px 0px 25px 0px rgba(0, 0, 0, 0.5);
     text-shadow: -1px -1px 1px black;
   }

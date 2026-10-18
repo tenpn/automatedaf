@@ -17,6 +17,11 @@ layout: default
           <div class="post-content">
             {{ content }}
           </div>
+          <script>
+            document.querySelectorAll(".post-content figure img[alt]").forEach(function (img) {
+              if (img.alt.trim() && !img.title) img.title = img.alt;
+            });
+          </script>
           {% if page.original_url %}
           <footer class="post-origin">
             <p>This post was originally hosted on <a href="{{ page.original_url }}">andrewfray.wordpress.com</a></p>

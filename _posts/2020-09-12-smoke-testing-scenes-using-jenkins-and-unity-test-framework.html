@@ -1,0 +1,187 @@
+---
+layout: post
+title: "Smoke-testing scenes, using Jenkins and Unity Test Framework"
+date: 2020-09-12 17:04:51 +0000
+image: /images/blog/2020/09/unity-test-runner-level-smoke-tests.png
+image_fit: contain
+categories: [Test Automation]
+original_url: https://andrewfray.wordpress.com/2020/09/12/smoke-testing-scenes-using-jenkins-and-unity-test-framework/
+---
+
+<p class="wp-block-paragraph">You may be familiar with Unity&#8217;s Test Runner window, where you can execute tests and
+    see results. This is the user-facing part of the <a
+        href="https://docs.unity3d.com/Packages/com.unity.test-framework@1.1/manual/index.html">Unity Test
+        Framework</a>, which is a very extensible system for running tests of any kind. At <a
+        href="https://twitter.com/roll_7">Roll7</a> I recently set up the test runner to automatically run simple
+    smoketests on every level of our (unannounced) game, and made jenkins report on failures. In this post I&#8217;ll
+    outline how I did the former, and <a href="/2020/09/27/running-unity-tests-on-a-build-server/">in part two</a>
+    I&#8217;ll cover the later. </p>
+
+
+
+<figure><img loading="lazy" width="474" height="327" src="/images/blog/2020/09/unity-test-runner-level-smoke-tests.png"
+        alt="A unity Test Runner window showing a LevelSmokeTests entry per level, each with LoadsCleanly, RunsCleanly and UnloadsCleanly tests" />
+    <figcaption>Play mode tests, automatically generated for every level</figcaption>
+</figure>
+
+
+
+<figure><img loading="lazy" width="1024" height="667" src="/images/blog/2020/09/jenkins-unity-test-results.png"
+        alt="A Jenkins Test Result page for build #412 showing 84 tests, 0 failures and 1 skipped, split across three redacted test packages" />
+    <figcaption>Some of our [redacted] playmode and editmode tests, running on Jenkins</figcaption>
+</figure>
+
+
+
+<p class="wp-block-paragraph">(I&#8217;m going to assume you have passing knowledge of how to write tests for the test
+    runner)</p>
+
+
+
+<p class="wp-block-paragraph">(a lot of this post is based on <a
+        href="https://www.youtube.com/watch?v=wTiF2D0_vKA">this</a> interesting talk about UTF from its creators at
+    Unite 2019)</p>
+
+
+
+<p class="wp-block-paragraph">The UTF is built upon <a href="https://nunit.org/">NUnit</a>, a .net testing framework.
+    That&#8217;s what provides all those [TestFixture] and [Test] attributes. One feature of NUnit that UTF also
+    supports is [<a
+        href="https://docs.nunit.org/articles/nunit/writing-tests/attributes/testfixturesource.html">TestFixtureSource</a>].
+    This attribute allows you to make a sort of &#8220;meta testfixture&#8221;, a template for how to make test fixtures
+    for specific resources. If you&#8217;re familiar with parameterized tests, it&#8217;s like that but on a fixture
+    level. </p>
+
+
+
+<p class="wp-block-paragraph">We&#8217;re going to make a TestFixtureSource provider that finds all level scenes in our
+    project, and then the TestFixutreSource itself that loads a specific level and runs some generic smoke tests on it.
+    The end result is that adding a new level will automatically add an entry for it to the play mode tests list. </p>
+
+
+
+<p class="wp-block-paragraph">There&#8217;s a few options for different source providers (see the NUnit docs for more),
+    but we&#8217;re going to make an IEnumerable that finds all our level scenes. The results of this IEnumerable are
+    what gets passed to our constructor &#8211; you could use any type here.</p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">
+    {% highlight csharp %}
+class AllRequiredLevelsProvider : IEnumerable<string>
+{
+    IEnumerator<string> IEnumerable<string>.GetEnumerator()
+    {
+        var allLevelGUIDs = AssetDatabase.FindAssets("t:Scene", new[] {"Assets/Scenes/Levels"} );
+        foreach(var levelGUID in allLevelGUIDs)
+        {
+            var levelPath = AssetDatabase.GUIDToAssetPath(levelGUID);
+            yield return levelPath;
+        }
+    }
+    public IEnumerator GetEnumerator() => (this as IEnumerable<string>).GetEnumerator();
+}
+{% endhighlight %}
+</div>
+
+
+<p class="wp-block-paragraph">Our TestFixture looks like a regular fixture, except also with the source attribute
+    linking to our provider. Its constructor takes a string that defines which level to load.</p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">
+    {% highlight csharp %}
+[TestFixtureSource(typeof(AllRequiredLevelsProvider))]
+public class LevelSmokeTests
+{
+    private string m_levelToSmoke;
+    public LevelSmokeTests(string levelToSmoke)
+    {
+        m_levelToSmoke = levelToSmoke;
+    }
+{% endhighlight %}
+</div>
+
+
+<p class="wp-block-paragraph">Now our fixture knows which level to test, but not how to load it. TestFixtures have a
+    [SetUp] attribute which runs before each test, but loading the level fresh for each test would be slow and wasteful.
+    Instead let&#8217;s use [<a
+        href="https://docs.nunit.org/articles/nunit/writing-tests/attributes/onetimesetup.html">OneTimeSetup</a>] (👀 at
+    the inconsistent capitalisation) and to load and unload our level for each fixture. This depends somewhat on your
+    game implementation, but for now let&#8217;s go with UnityEngine.SceneManagement:</p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">
+    {% highlight csharp %}
+// class LevelSmokeTests {
+    [OneTimeSetUp]
+    public void LoadScene()
+    {
+        SceneManager.LoadScene(m_levelToSmoke);
+    }
+{% endhighlight %}
+</div>
+
+
+<p class="wp-block-paragraph">Finally, we need some tests that would work on any level we throw at it. The simplest
+    approach is probably to just watch the console for errors as we load in, sit in the level, and then as we load out.
+    Any console errors at any of these stages should fail the test. </p>
+
+
+
+<p class="wp-block-paragraph">UTF provides <a
+        href="https://docs.unity3d.com/Packages/com.unity.test-framework@1.1/manual/reference-custom-assertion.html#logassert">LogAsset</a>
+    to validate the output of the log, but at this time it only lets you prescribe what should appear. We don&#8217;t
+    care about Debug.Log() output, but want to know if there was anything worse than that. Particularly, in our case,
+    we&#8217;d like to fail for warnings as well as errors. Too many &#8220;benign&#8221; warnings can hide serious
+    issues! So, here&#8217;s <a href="https://gist.github.com/tenpn/67d77cd112de70ff24749b963ac28007">a little utility
+        class</a> called LogSeverityTracker, that helps check for clean consoles. Check the comments for usage.</p>
+
+
+
+<p class="wp-block-paragraph">Our tests can use the [<a
+        href="https://docs.nunit.org/articles/nunit/writing-tests/attributes/order.html">Order</a>] attribute to ensure
+    they happen in sequence:</p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">
+    {% highlight csharp %}
+// class LevelSmokeTests {
+    [Test, Order(1)]
+    public void LoadsCleanly()
+    {
+        m_logTracker.AssertCleanLog();
+    }
+
+    [UnityTest, Order(2)]
+    public IEnumerator RunsCleanly()
+    {
+        // wait some arbitrary time
+        yield return new WaitForSeconds(5);
+        m_logTracker.AssertCleanLog();
+    }
+
+    [UnityTest, Order(3)]
+    public IEnumerator UnloadsCleanly()
+    {
+        // how you unload is game-dependent 
+        yield return SceneManager.LoadSceneAsync("mainmenu");
+        m_logTracker.AssertCleanLog();
+    }
+{% endhighlight %}
+</div>
+
+
+<p class="wp-block-paragraph">Now we&#8217;re at the point where you can hit Run All in the Test Runner and see each of
+    your levels load in turn, wait a while, then unload. You&#8217;ll get failed tests for console warnings or errors,
+    and newly-added levels will get automatically-generated test fixtures.</p>
+
+
+
+<p class="wp-block-paragraph">More tests are undoubtedly more useful than less. Depending on the complexity and setup of
+    your game, the next steps might be to get the player to dumbly walk around for a little bit. You can get a
+    surprising amount of info from a dumb walk!</p>
+
+
+
+<p class="wp-block-paragraph">In <a href="/2020/09/27/running-unity-tests-on-a-build-server/">part 2</a>, I&#8217;ll
+    outline how I added all this to jenkins. It&#8217;s not egregiously hard, but it can be a bit cryptic at times. </p>

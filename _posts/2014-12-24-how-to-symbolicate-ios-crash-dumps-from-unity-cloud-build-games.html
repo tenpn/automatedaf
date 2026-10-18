@@ -1,0 +1,25 @@
+---
+layout: post
+title: "How to symbolicate iOS crash dumps from Unity Cloud Build games"
+date: 2014-12-24 16:26:18 +0000
+categories: [Build Engineering]
+original_url: https://andrewfray.wordpress.com/2014/12/24/how-to-symbolicate-ios-crash-dumps-from-unity-cloud-build-games/
+---
+
+<p><em>Disclaimer: this advice is provided without warranty, works on my machine, etc. Use it at your own risk.</em></p>
+<p>We&#8217;ve been using <a href="http://unity3d.com/unity/cloud-build">Unity Cloud Build</a> at <a href="http://spryfox.com/">Spry Fox</a> for a soon-to-be-announced project. Since we&#8217;re a remote company, it&#8217;s great to be able to push and know that both Android and iOS builds will be soon available to everyone in the team with your new feature. It&#8217;s saving a lot of time every day.</p>
+<p>This morning I pushed our new IAP back-end, which of course involved some low-level stuff on both platforms. Everything worked on local builds, but when I tried the iOS build from Unity Cloud, it crashed on start-up. Getting the callstack of the crash turned into a bit of an odyssey. I thought I&#8217;d document it here.</p>
+<p>By default, Unity will not generate Xcode projects that produce useful debug info. We can fix this by adjusting the Xcode project after generation, but that&#8217;s no good for Unity Cloud Build where we have no control.</p>
+<p>So, <strong>one time only</strong>, you should add <a href="https://gist.github.com/tenpn/f8da1b7df7352a1d50ff">this file https://gist.github.com/tenpn/f8da1b7df7352a1d50ff</a> to your project (EDIT: in an editor subfolder; thanks Terry Paton). That will do the post-processing for you and for Unity Cloud Build. (There are conflicting reports as to if this increases build size, but you definitely want it while developing. It might still be worthwhile leaving it in for release, because it will be extremely helpful in chasing down crashes in the wild.)</p>
+<p>Wait for Unity Cloud Build to produce a new build containing that change, install it, and repro the crash on your device. Then follow these steps:</p>
+<ol>
+<li>Go to the cloud build project for your game, and find the dSYM and ipa downloads for the build you installed. At the moment, you click Install on the build in the history list, then <em>Share</em>, then both <em>Download to Desktop</em> for the ipa and <em>Download dSYM</em>.</li>
+<li>Unzip the dSYM somewhere safe. I put it in a new folder named after the Cloud build number we are investigating. The location should be <em>somewhere Spotlight can index</em>.</li>
+<li>Rename the ipa extension to zip, and unzip the .app inside to the same folder as the dSYM.</li>
+<li>Attach your iOS device via USB to your OSX machine</li>
+<li>In Xcode (these steps are for Xcode 6.1.1), go to <em>Windows-&gt;Devices</em></li>
+<li>Select your device in the left pane, and click <em>View Device Logs</em></li>
+<li>There should be a crash dump for your game. Locate it by the process name and crash time columns and click on it.</li>
+<li>The right window should now have the crash dump with a named callstack. If not, right-click on the crash dump in the left pane and select <em>Re-Symbolicate Log</em>.</li>
+</ol>
+<p>Hopefully this gets you enough info to start debugging your app.</p>

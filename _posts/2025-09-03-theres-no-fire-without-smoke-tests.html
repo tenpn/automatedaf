@@ -3,7 +3,7 @@ layout: post
 title: "There’s no fire without Smoke Tests"
 date: 2025-09-03 14:19:50 +0000
 image: /images/blog/2025/09/candle-smoke.jpg
-categories: [Test automation]
+categories: [Test Automation]
 original_url: https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without-smoke-tests/
 ---
 
@@ -15,7 +15,7 @@ original_url: https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without
 
 
 
-<figure class="wp-block-image size-large"><a href="/images/blog/2025/09/candle-smoke.jpg"><img data-attachment-id="806" data-permalink="https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without-smoke-tests/175630656_26d34b951a_k/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/175630656_26d34b951a_k.jpg" data-orig-size="2047,1365" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="175630656_26d34b951a_k" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/175630656_26d34b951a_k.jpg?w=1024" loading="lazy" width="1024" height="682" src="/images/blog/2025/09/candle-smoke.jpg" alt="" class="wp-image-806" /></a><figcaption class="wp-element-caption"><a href="https://flic.kr/p/gw9SL">Flirtation </a>by Andrew Yee, <a href="https://creativecommons.org/licenses/by/2.0/deed.en">CC BY 2.0</a></figcaption></figure>
+<figure><img loading="lazy" width="1024" height="682" src="/images/blog/2025/09/candle-smoke.jpg" alt="A lit candle beside a just-extinguished one, its trail of smoke curling across the flame against a black background" /><figcaption><a href="https://flic.kr/p/gw9SL">Flirtation </a>by Andrew Yee, <a href="https://creativecommons.org/licenses/by/2.0/deed.en">CC BY 2.0</a></figcaption></figure>
 
 
 
@@ -73,7 +73,7 @@ original_url: https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without
 
 
 
-<figure class="wp-block-image size-large"><a href="/images/blog/2025/09/kart-menu-to-race-start.gif"><img data-attachment-id="812" data-permalink="https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without-smoke-tests/kart-intro/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/kart-intro.gif" data-orig-size="1195,700" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="kart-intro" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/kart-intro.gif?w=1024" loading="lazy" width="1024" height="599" src="/images/blog/2025/09/kart-menu-to-race-start.gif" alt="A main menu showing PLAY, a mouse pointer selects the button. A kart track loads, and counts in 3 2 1 before the kart drives off. " class="wp-image-812" /></a></figure>
+<figure><img loading="lazy" width="1024" height="599" src="/images/blog/2025/09/kart-menu-to-race-start.gif" alt="A main menu showing PLAY, a mouse pointer selects the button. A kart track loads, and counts in 3 2 1 before the kart drives off. " /></figure>
 
 
 
@@ -99,18 +99,20 @@ original_url: https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without
 
 
 
-<pre class="wp-block-code"><code>using System.Collections;
+{% highlight csharp %}
+using System.Collections;
 using UnityEngine;
 using UnityEngine.TestTools;
 
 public class LevelSmokeTestsFixture
 {
-    &#091;UnityTest]
+    [UnityTest]
     public IEnumerator MainMenu_Booted_NoErrors()
     {
         yield return new WaitForSeconds(10); // just to get it compiling
     }
-}</code></pre>
+}
+{% endhighlight %}
 
 
 
@@ -122,7 +124,7 @@ public class LevelSmokeTestsFixture
 
 
 
-<figure class="wp-block-image size-large"><a href="/images/blog/2025/09/empty-unity-playmode-test.png"><img data-attachment-id="815" data-permalink="https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without-smoke-tests/image-12/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/image.png" data-orig-size="1960,1281" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="image" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/image.png?w=1024" loading="lazy" width="1024" height="669" src="/images/blog/2025/09/empty-unity-playmode-test.png" alt="A running empty unity playmode test, showing an empty Hierarchy and blank scene view." class="wp-image-815" /></a></figure>
+<figure><img loading="lazy" width="1024" height="669" src="/images/blog/2025/09/empty-unity-playmode-test.png" alt="A running empty unity playmode test, showing an empty Hierarchy and blank scene view." /></figure>
 
 
 
@@ -130,15 +132,16 @@ public class LevelSmokeTestsFixture
 
 
 
-<pre class="wp-block-code"><code>public class LevelSmokeTestsFixture
+{% highlight csharp %}
+public class LevelSmokeTestsFixture
 {
-    &#091;OneTimeSetUp]
+    [OneTimeSetUp]
     public void LevelSmokeTestsOneTimeSetup()
     {
         Application.logMessageReceived += OnLog;
     }
 
-    &#091;SetUp]
+    [SetUp]
     public void SetUp()
     {
         m_isTestFailed = false;
@@ -154,14 +157,15 @@ public class LevelSmokeTestsFixture
     }
     private bool m_isTestFailed;
     
-    &#091;UnityTest]
+    [UnityTest]
     public IEnumerator MainMenu_Booted_NoErrors()
     {
         SceneManager.LoadScene(0);
         yield return null;
         Assert.That(m_isTestFailed, Is.False);
     }
-}</code></pre>
+}
+{% endhighlight %}
 
 
 
@@ -181,7 +185,7 @@ public class LevelSmokeTestsFixture
 
 
 
-<figure class="wp-block-image size-large"><a href="/images/blog/2025/09/unity-test-runner-unhandled-log-failure.png"><img data-attachment-id="824" data-permalink="https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without-smoke-tests/image-13/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/image-1.png" data-orig-size="788,429" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="image" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/image-1.png?w=788" loading="lazy" width="788" height="429" src="/images/blog/2025/09/unity-test-runner-unhandled-log-failure.png" alt="A unity Test Runner window, showing our test in red, with text below saying there was an unhandled log message." class="wp-image-824" /></a></figure>
+<figure><img loading="lazy" width="788" height="429" src="/images/blog/2025/09/unity-test-runner-unhandled-log-failure.png" alt="A unity Test Runner window, showing our test in red, with text below saying there was an unhandled log message." /></figure>
 
 
 
@@ -217,13 +221,15 @@ public class LevelSmokeTestsFixture
 
 
 
-<pre class="wp-block-code"><code>&#091;UnityTest]
+{% highlight csharp %}
+[UnityTest]
 public IEnumerator MainMenu_AndLoadsLevel_NoErrors()
 {
     yield return SceneManager.LoadSceneAsync("MainScene");
     yield return null;
     Assert.That(m_isTestFailed, Is.False);
-}</code></pre>
+}
+{% endhighlight %}
 
 
 
@@ -235,7 +241,8 @@ public IEnumerator MainMenu_AndLoadsLevel_NoErrors()
 
 
 
-<pre class="wp-block-code"><code>&#091;UnityTest,Order(00)]
+{% highlight csharp %}
+[UnityTest,Order(00)]
 public IEnumerator T00_MainMenu_Booted_NoErrors()
 {
     SceneManager.LoadScene(0);
@@ -243,13 +250,14 @@ public IEnumerator T00_MainMenu_Booted_NoErrors()
     Assert.That(m_isTestFailed, Is.False);
 }
 
-&#091;UnityTest,Order(10)]
+[UnityTest,Order(10)]
 public IEnumerator T10_MainMenu_AndLoadsLevel_NoErrors()
 {
     yield return SceneManager.LoadSceneAsync("MainScene");
     yield return null;
     Assert.That(m_isTestFailed, Is.False);
-}</code></pre>
+}
+{% endhighlight %}
 
 
 
@@ -269,14 +277,16 @@ public IEnumerator T10_MainMenu_AndLoadsLevel_NoErrors()
 
 
 
-<pre class="wp-block-code"><code>&#091;UnityTest, Order(20)]
+{% highlight csharp %}
+[UnityTest, Order(20)]
 public IEnumerator T20_Race_Started_NoErrors()
 {
-    var timeManager = Object.FindFirstObjectByType&lt;TimeManager&gt;();
-    yield return new WaitUntil(() =&gt; timeManager.IsRaceStarted);
+    var timeManager = Object.FindFirstObjectByType<TimeManager>();
+    yield return new WaitUntil(() => timeManager.IsRaceStarted);
     yield return new WaitForSeconds(0.5f);
     Assert.That(m_isTestFailed, Is.False);
-}</code></pre>
+}
+{% endhighlight %}
 
 
 
@@ -288,7 +298,7 @@ public IEnumerator T20_Race_Started_NoErrors()
 
 
 
-<figure class="wp-block-image size-large"><a href="/images/blog/2025/09/kart-smoke-test-full-run.gif"><img data-attachment-id="838" data-permalink="https://andrewfray.wordpress.com/2025/09/03/theres-no-fire-without-smoke-tests/kart-smoke-final-2/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/kart-smoke-final-1.gif" data-orig-size="1588,702" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="kart-smoke-final" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/09/kart-smoke-final-1.gif?w=1024" loading="lazy" width="1024" height="452" src="/images/blog/2025/09/kart-smoke-test-full-run.gif" alt="A full smoke test run, launched from the unity test runner. It loads the menu, enters the track, waits for the countdown, then exits the game with three green ticks." class="wp-image-838" /></a></figure>
+<figure><img loading="lazy" width="1024" height="452" src="/images/blog/2025/09/kart-smoke-test-full-run.gif" alt="A full smoke test run, launched from the unity test runner. It loads the menu, enters the track, waits for the countdown, then exits the game with three green ticks." /></figure>
 
 
 

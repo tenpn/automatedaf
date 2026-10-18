@@ -4,7 +4,7 @@ title: "Exploding barrels, and why your first test should be an Asset Test"
 date: 2025-05-26 16:19:44 +0000
 description: "Learn about asset tests: an accessible approach to writing tests for game projects, and a great starting point for people new to testing"
 image: /images/blog/2025/05/half-life-2-exploding-barrels.jpg
-categories: [Test automation]
+categories: [Test Automation]
 original_url: https://andrewfray.wordpress.com/2025/05/26/exploding-barrels-and-why-your-first-test-should-be-an-asset-test/
 ---
 
@@ -12,7 +12,7 @@ original_url: https://andrewfray.wordpress.com/2025/05/26/exploding-barrels-and-
 
 
 
-<figure class="wp-block-image"><img src="/images/blog/2025/05/half-life-2-exploding-barrels.jpg" alt="" /><figcaption class="wp-element-caption">(Exploding barrels from Half Life 2, because Rollerdrome&#8217;s barrels are actually quite hard to screenshot)</figcaption></figure>
+<figure><img src="/images/blog/2025/05/half-life-2-exploding-barrels.jpg" alt="A cluster of rusty oil drums, some red with white Flammable hazard labels, stacked against a concrete wall, with more lying on their sides" /><figcaption>(Exploding barrels from Half Life 2, because Rollerdrome&#8217;s barrels are actually quite hard to screenshot)</figcaption></figure>
 
 
 
@@ -100,17 +100,18 @@ original_url: https://andrewfray.wordpress.com/2025/05/26/exploding-barrels-and-
 
 
 
-<pre class="wp-block-code"><code>using NUnit.Framework;
+{% highlight csharp %}
+using NUnit.Framework;
 
 namespace Game.Tests {
 
-  &#091;TestFixture]
+  [TestFixture]
   class SceneAssetTestFixture {
 
-    &#091;Test]
+    [Test]
     public void AllBarrelsOnCorrectLayer() {
       var allBarrels = 
-          Object.FindObjectsByType&lt;Barrel&gt;(FindObjectsSortMode.None);
+          Object.FindObjectsByType<Barrel>(FindObjectsSortMode.None);
       foreach (var barrel in allBarrels)
       {
         Assert.That(barrel.gameObject.layer,         
@@ -120,7 +121,8 @@ namespace Game.Tests {
 
     // more scene asset tests...
   }
-}</code></pre>
+}
+{% endhighlight %}
 
 
 
@@ -132,33 +134,35 @@ namespace Game.Tests {
 
 
 
-<pre class="wp-block-code"><code>using NUnit.Framework;
+{% highlight csharp %}
+using NUnit.Framework;
 
 namespace Game.Tests {
-  public class SceneSource : IEnumerable&lt;string&gt; {
-    public IEnumerator&lt;string&gt; GetEnumerator() {
+  public class SceneSource : IEnumerable<string> {
+    public IEnumerator<string> GetEnumerator() {
       return EditorBuildSettings.scenes
-          .Select(scene =&gt; scene.path)
+          .Select(scene => scene.path)
           .GetEnumerator();
     }
-    IEnumerator IEnumerable.GetEnumerator() =&gt; GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
   }
 
-  &#091;TestFixtureSource(typeof(SceneSource))]
+  [TestFixtureSource(typeof(SceneSource))]
   public class SceneAssetTestFixture {
     private readonly string m_sceneName;
     public SceneAssetTestFixture(string sceneName) {
       m_sceneName = sceneName;
     }
 
-    &#091;OneTimeSetUp]
+    [OneTimeSetUp]
     public void OneTimeSetup() {
       EditorSceneManager.OpenScene(m_sceneName, OpenSceneMode.Single);
     }
 
-    &#091;Test]
+    [Test]
     public void AllBarrelsOnCorrectLayer() {
-      // ...</code></pre>
+      // ...
+{% endhighlight %}
 
 
 
@@ -192,7 +196,7 @@ namespace Game.Tests {
 
 
 
-<figure class="wp-block-image size-large"><a href="/images/blog/2025/05/unity-test-runner-scene-asset-tests.png"><img loading="lazy" width="944" height="326" data-attachment-id="772" data-permalink="https://andrewfray.wordpress.com/2025/05/26/exploding-barrels-and-why-your-first-test-should-be-an-asset-test/image-9/#main" data-orig-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/05/image.png" data-orig-size="944,326" data-comments-opened="1" data-image-meta="{&quot;aperture&quot;:&quot;0&quot;,&quot;credit&quot;:&quot;&quot;,&quot;camera&quot;:&quot;&quot;,&quot;caption&quot;:&quot;&quot;,&quot;created_timestamp&quot;:&quot;0&quot;,&quot;copyright&quot;:&quot;&quot;,&quot;focal_length&quot;:&quot;0&quot;,&quot;iso&quot;:&quot;0&quot;,&quot;shutter_speed&quot;:&quot;0&quot;,&quot;title&quot;:&quot;&quot;,&quot;orientation&quot;:&quot;0&quot;}" data-image-title="image" data-image-description="" data-image-caption="" data-large-file="https://andrewfray.wordpress.com/wp-content/uploads/2025/05/image.png?w=944" src="/images/blog/2025/05/unity-test-runner-scene-asset-tests.png" alt="" class="wp-image-772" /></a></figure>
+<figure><img loading="lazy" width="944" height="326" src="/images/blog/2025/05/unity-test-runner-scene-asset-tests.png" alt="Unity Test Runner tree with a SceneAssetTestFixture per Karting scene, each running AllBarrelsOnCorrectLayer and GameManager_Exactly1" /></figure>
 
 
 

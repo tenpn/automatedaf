@@ -1,0 +1,536 @@
+---
+layout: post
+title: "Building Unity using Jenkins Pipelines"
+date: 2020-12-28 22:25:23 +0000
+image: /images/blog/2020/12/jenkins-build-with-parameters.png
+image_fit: contain
+categories: [Build Engineering]
+original_url: https://andrewfray.wordpress.com/2020/12/28/building-unity-using-jenkins-pipelines/
+---
+
+<p class="wp-block-paragraph">This is the third of a <a href="/2020/09/12/smoke-testing-scenes-using-jenkins-and-unity-test-framework/">series</a> of <a href="/2020/09/27/running-unity-tests-on-a-build-server/">posts</a> on Jenkins and Unity.</p>
+
+
+
+<p class="wp-block-paragraph">In this post I&#8217;ll outline how I set up <a href="https://www.jenkins.io/">Jenkins</a> to make reliable repeatable Unity builds, using a pipelines script (also called a jenkinsfile) that&#8217;s stored inside source control. I&#8217;ll outline the plugins I used and the reasons behind some of my choices. This is <strong>not </strong>a tutorial in Jenkins or pipeline scripts. It&#8217;s more of a tour.</p>
+
+
+
+<p class="wp-block-paragraph">I&#8217;m not an expert in Jenkins &#8211; most of this is pieced together from the <a href="https://www.jenkins.io/doc/book/pipeline/">Pipeine docs</a> and google. It may be that there are better ways to achieve the same results &#8211; I&#8217;d be keen to hear about them in the comments!</p>
+
+
+
+<p class="wp-block-paragraph">This post just deals with the jenkinsfile. In a future post I&#8217;ll deal with how I configured Jenkins to use it.</p>
+
+
+
+<p class="wp-block-paragraph">I am using Jenkins v2.257.</p>
+
+
+
+<h2 class="wp-block-heading">Why Pipelines?</h2>
+
+
+
+<p class="wp-block-paragraph">You can set up Jenkins to do almost anything you want via the web interface. This is ok for experimenting, but it has drawbacks:</p>
+
+
+
+<ul class="wp-block-list"><li>config changes aren&#8217;t easy to document</li><li>nor can they be rolled back</li><li>it&#8217;s hard to share common build setups between related Jenkins jobs</li></ul>
+
+
+
+<p class="wp-block-paragraph">All these go away if we move to a piepelines script stored in a file (commonly called &#8220;the jenkinsfile&#8221;) within the project&#8217;s source control. </p>
+
+
+
+<h2 class="wp-block-heading">Supported jobs</h2>
+
+
+
+<p class="wp-block-paragraph">In Jenkins, a &#8220;job&#8221; is a particular way of building your project. This one jenkinsfile will run multiple jobs for us:</p>
+
+
+
+<ul class="wp-block-list"><li>VCS Push: every time anyone pushes to SVN, Jenkins will pull latest, run some quick automated tests, and make a build. If any step fails, Jenkins reports a failure. The build artifact is thrown away.</li><li>Health Check: on a schedule, multiple times a day, Jenkins will do some more time-consuming automated tests, and make a build. If any step fails, Jenkins reports a failure. The build artifact is thrown away.</li><li>Deploy: at 6am and 12pm, do everything Health Check does, but make the result available to QA. They&#8217;ll then smoke the build further and make it available to everyone else if it&#8217;s good.</li></ul>
+
+
+
+<p class="wp-block-paragraph">The Health Check build exists because there&#8217;s a big gap between our 12pm build and the next day&#8217;s 6am build. If someone commits something at 1pm that would fail the slow automated tests, we might not know until the next morning, and the QA build will already be late. Now the Health Check build runs multiple times in the afternoon, and we can fix stuff before we log off for the day. </p>
+
+
+
+<h2 class="wp-block-heading">File structure</h2>
+
+
+
+<p class="wp-block-paragraph">When you&#8217;re googling for pipelines info, you&#8217;ll discover it&#8217;s a concept that has undergone a few revisions. What we&#8217;re talking about here is a &#8220;declarative pipeline&#8221; (as opposed to the older &#8220;scripted pipeline&#8221;), which is (mostly) composed of a jenkinsfile written in a subset of the <a href="https://en.wikipedia.org/wiki/Apache_Groovy">Groovy</a> language, which runs on the JVM. </p>
+
+
+
+<p class="wp-block-paragraph">A declarative pipelines script is roughly defined as a series of &#8220;stages&#8221;, where each stage is a series of commands, or &#8220;steps&#8221;. Stages can be hierarchical and nest and run in parallel, but for our purposes, we&#8217;re going to stay pretty linear and flat. If any stage fails, the subsequent stages won’t run. </p>
+
+
+
+<p class="wp-block-paragraph">We&#8217;re going to have six stages:</p>
+
+
+
+<ul class="wp-block-list"><li>Clean &#8211; we&#8217;ve all had corrupted library files, and sometimes you want to make really sure you&#8217;re starting from scratch.</li><li>Prewarm &#8211; getting things ready so we can start the builds</li><li>Editmode Tests &#8211; fast declarative-style tests running under the <a href="https://docs.unity3d.com/Packages/com.unity.test-framework@1.1/manual/index.html">Unity Test Framework</a></li><li>Playmode Tests &#8211; slower tests that require running the game. See my recent post about running <a href="/2020/09/27/running-unity-tests-on-a-build-server/">playmode tests on Jenkins</a>.</li><li>Build &#8211; we always care if this succeeds, but depending on the job we may throw away any produced artifact. We want to capture those #if UNITY_EDITOR errors!</li><li>Deploy &#8211; putting the build artifact somewhere useful. This is somewhat project-dependent and, at the moment, confidential, so I will only give the briefest outline of this step.</li></ul>
+
+
+
+<h2 class="wp-block-heading">Metadata</h2>
+
+
+
+<p class="wp-block-paragraph">You&#8217;ll find the full jenkinsfile at the bottom of the page, but let&#8217;s break it down by starting at the top.</p>
+
+
+
+<p class="wp-block-paragraph">The pipeline itself doesn&#8217;t start until the <code>pipeine</code> keyword, but since this is a subset of Groovy, we can define constants at the top. </p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
+UNITY_PATH = "C:\\Program Files\\Unity\\Hub\\Editor\\2019.4.5f1\\Editor\\Unity.exe"
+{% endhighlight %}</div>
+
+
+<p class="wp-block-paragraph">There&#8217;s probably a better service-orientated way of installing and locating Unity, but in this case we chose to just manually create a windows machine on ec2, remote desktop in, and install Unity. Ship it.</p>
+
+
+
+<p class="wp-block-paragraph">Next we start the pipeline, and define parameters. These appear as dropdowns when starting a job in Jenkins, and you access them further down the script using <code>params.PARAMETER_NAME</code>: </p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
+pipeline {
+    parameters {
+        choice(name: 'TYPE', choices: ['Debug', 'Release', 'Publisher'], description: 'Do you want cheats or speed?')
+        choice(name: 'BUILD', choices: ['Fast', 'Deploy', 'HealthCheck'], description: 'Fast builds run minimal tests and make a build. HealthCheck builds run more automated tests and are slower. Deploy builds are HealthChecks + a deploy.')
+        booleanParam(name: 'CLEAN', defaultValue: false, description: 'Tick to removed cached files - will take an eon')
+        booleanParam(name: 'SKIP_PLAYMODE_TESTS', defaultValue: false, description: 'In an emergency, to allow Deploy builds to work with a failing playmode test')
+    }
+{% endhighlight %}</div>
+
+
+<p class="wp-block-paragraph">Here&#8217;s how they appear in Jenkins in the Build With Parameters tab:</p>
+
+
+
+<figure><img loading="lazy" src="/images/blog/2020/12/jenkins-build-with-parameters.png" alt="Jenkins build form with TYPE and BUILD dropdowns set to Debug and Fast, CLEAN and SKIP_PLAYMODE_TESTS checkboxes, and a Build button" width="391" height="331" /></figure>
+
+
+
+<p class="wp-block-paragraph">More details on each param:</p>
+
+
+
+<ul class="wp-block-list"><li>Type: we&#8217;ll pass this option directly to our Unity build function, which will set various scripting defines as required. </li><li>Build: this is used only within the jenkinsfile, to switch different parts of the pipeline in and out. It correlates with the job types mentioned above.</li><li>Clean: sometimes you gotta nuke the site from orbit</li><li>Skip Playmode Tests: a nod to practicality &#8211; I love automated tests but very rarely you know the test failure is manageable, and you need a build right now. In practice our team rarely uses this option.</li></ul>
+
+
+
+<p class="wp-block-paragraph">Here follows some boilerplate for Jenkins to understand how to run our job:</p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
+agent {
+    node {
+        label "My Project"
+        // force everyone to the space space, so we can share a library file.
+        customWorkspace 'workspace\\MyProject'
+    }
+}
+options {
+    timestamps()
+    // as a failsafe. our build tend around the 15min mark, so 45 would be excessive.
+    timeout(time: 45, unit: 'MINUTES')
+}
+{% endhighlight %}</div>
+
+
+<p class="wp-block-paragraph">The <code>node</code> block is about finding an ec2 instance to run the job on. We&#8217;ll deal with ec2 setup in a future post. The <code>customWorkspace</code> setting is a cost-saving measure: on ec2, the size of persistent SSD storage is a significant part of our costs. We could save money by switching to spinning rust, but we want the build speed of an SSD. Instead, we&#8217;ll try to keep SSD size down by not having multiple versions of the same project checked out all over the drive. In practice, we mostly only work in trunk anyway, and when we build another branch it&#8217;s not massively divergent. We may revisit this over the course of the project.</p>
+
+
+
+<h2 class="wp-block-heading">Clean</h2>
+
+
+
+<p class="wp-block-paragraph">Our first stage! It&#8217;s pretty simple. It only runs if the Clean parameter has been set, and it just runs some dos commands to clean out the library and temp folders:</p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
+stages {
+    stage('Clean') {
+        when {
+            expression { return params.CLEAN }
+        }
+        steps {
+            bat "if exist Library (rmdir Library /s /q)"
+            bat "if exist Temp (rmdir Temp /s /q)"
+        }
+    }
+{% endhighlight %}</div>
+
+
+<p class="wp-block-paragraph">(I&#8217;m surprised that using the boolean Clean param in a when block isn&#8217;t easier? I may have missed some better syntax)</p>
+
+
+
+<h2 class="wp-block-heading">Prewarm</h2>
+
+
+
+<p class="wp-block-paragraph">Prewarm helps set the stage for the coming attractions. We&#8217;re going to use some <code>script</code> blocks here to drop into the old scripted pipeline format, which lets us do some more complex logic. </p>
+
+
+
+<p class="wp-block-paragraph">The first thing we want to do is figure out what branch we&#8217;re on. Jenkins will always run your pipeline with some predefined environment variables, including some which seem to imply they&#8217;ll contain your branch name, but try as I might they didn&#8217;t seem to work for us. Maybe it&#8217;s because we&#8217;re using SVN? So I had to figure it out for myself:</p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
+stage('Prewarm') {
+    steps {
+        script {
+            // not easy to get jenkins to tell us the current branch! none of the built-in envs seem to work?
+            // let's just ask svn directly.
+            def get_branch_script = 'svn info | select-string "Relative URL: \\^\\/(.*)" | %{\$_.Matches.Groups[1].Value}'
+            env.R7_SVN_BRANCH = powershell(returnStdout: true, script:get_branch_script).trim()
+        }
+{% endhighlight %}</div>
+
+
+<p class="wp-block-paragraph">We&#8217;ll call out to powershell because urgh grepping in dos is <em>esoteric</em>. We&#8217;ll store it in a new env variable, which will let us use this info in future stages.</p>
+
+
+
+<p class="wp-block-paragraph">Next we&#8217;ll set up the build name: </p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
+buildName "${BUILD_NUMBER} - ${TYPE}@${env.R7_SVN_BRANCH}/${SVN_REVISION}"
+script {
+    if (params.BUILD == 'Deploy') {
+        buildName "${env.BUILD_DISPLAY_NAME} ^Deploy"
+    }
+    if (params.BUILD == 'HealthCheck') {
+        buildName "Health Check of ${TYPE}@${env.R7_SVN_BRANCH}/${SVN_REVISION}"
+    }
+    if (params.BUILD == 'HealthCheck' || params.BUILD == 'Deploy') {
+        // let's warn that a deploy build is in progress
+        slackSend color: 'good',
+            message: ":hourglass: build ${env.BUILD_DISPLAY_NAME} STARTED (<${env.BUILD_URL}|Open>)",
+            channel: "project_builds"
+    }
+}
+{% endhighlight %}</div>
+
+
+<p class="wp-block-paragraph">the <code>buildName</code> command lets you set your build name, and <code>env.BUILD_DISPLAY_NAME</code> contains the current version of that. The default Jenkins build name is just &#8220;#99&#8221; or whatever, which is less than helpful. Here, we&#8217;ll make sure it&#8217;s of the format &#8220;JenkinsBuildNumber &#8211; Type@Branch/Changelist [^Deploy]&#8221;. It&#8217;ll then be obvious from a glance in both the Jenkins dash and slack notifications what&#8217;s building and why. </p>
+
+
+
+<p class="wp-block-paragraph">We also send a slack notification of health check and deploy builds, since it&#8217;s useful to know they&#8217;ve started. It gives people a good sense of if their commits have made it into the build or not. More on notifications below.</p>
+
+
+
+<p class="wp-block-paragraph">Next some more housekeeping for the automated tests, which communicate with Jenkins via xml files:</p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
+// clean tests
+bat "if exist *tests.xml (del *tests.xml)"
+{% endhighlight %}</div>
+
+
+<p class="wp-block-paragraph">Finally, we&#8217;ll open Unity once and close it. One persistent problem with Unity in automated systems is of serialisation errors from out-of-date code working with new data. For instance, let&#8217;s assume you&#8217;ve got a bunch of existing scriptable assets, and your latest commit refactors them. On the build server, Unity will open, validate the assets with the pre-refactor code that it has from the last run, throw some errors because nothing looks right, then rebuild the code. Subsequent launches will succeed because both the data and the code are in sync. So, to keep those spurious errors out of real build logs, we&#8217;ll do this kind of ghost-open:</p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
+retry(count: 2) {
+    bat "\"${UNITY_PATH}\" -nographics -buildTarget Win64 -quit -batchmode -projectPath . -executeMethod MyBuildFunction -MyBuildType \"${params.TYPE}\" -MyTestOnly -logFile"
+}
+{% endhighlight %}</div>
+
+
+<p class="wp-block-paragraph">This is the first time we&#8217;ve seen Jenkinfile talk to Unity! We&#8217;ll explain more in the next section, but just pretend you understand it for now. The important part is <code>-MyTestOnly</code>, which tells our build function to only set script defines, recompile, and quit. </p>
+
+
+
+<p class="wp-block-paragraph">We wrap the whole thing into a <code>retry</code> block as a side effect of us building multiple branches in one workspace. Sometimes, we get a &#8220;library corrupted&#8221; failure when switching. Running a second time makes it go away &#8211; no explicit Clean required. Lots of getting Unity running on Jenkins is just experimenting and making do with what works!</p>
+
+
+
+<p class="wp-block-paragraph">You also see some examples of groovy&#8217;s string interpolation. I admit I&#8217;m no expert, bu there seems to be about a dozen ways of doing string interp in groovy, and not all approaches work in all locations. If one didn&#8217;t work, I went on to the next, and what you see here is the one that works here. </p>
+
+
+
+<h2 class="wp-block-heading">Talking to Unity</h2>
+
+
+
+<p class="wp-block-paragraph">We need to convince Unity to do what we want, and we want any failures to produce useful output in the Jenkins dashboard. You can find more in the <a href="https://docs.unity3d.com/Manual/CommandLineArguments.html">Unity docs</a> but I found the best way to get output was to have <code>-logFile</code> last, with no path set. </p>
+
+
+
+<p class="wp-block-paragraph">To convince Unity to do what we want, we use the <code>-executeMethod</code> parameter. That will call a static c# function of your choice. How to make builds from within Unity is outside the scope of this blog post. </p>
+
+
+
+<p class="wp-block-paragraph">Here&#8217;s our next few stages, and the various ways they call to Unity:</p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
+stage ('Editmode Tests') {
+    steps {
+        bat "\"${UNITY_PATH}\" -nographics -batchmode -projectPath . -runTests -testResults editmodetests.xml -testPlatform editmode -logFile"
+    }
+}
+stage ('Playmode Tests') {
+    when {
+        expression {
+            return (params.BUILD == 'Deploy' || params.BUILD == 'HealthCheck') && !params.SKIP_PLAYMODE_TESTS
+        }
+    }
+    steps {
+        // no -nographics on playmode tests. they don't log right now? which is weird cuz the editmode tests do with almost the same setup.
+        bat "\"${UNITY_PATH}\" -batchmode -projectPath . -runTests -testResults playmodetests.xml -testPlatform playmode -testCategory \"BuildServer\" -logFile"
+    }
+}
+stage ('Build') {
+    steps {
+        bat "\"${UNITY_PATH}\" -nographics -buildTarget Win64 -quit -batchmode -projectPath . -executeMethod MyBuildFunction  -MyBuildType \"${params.TYPE}\" -logFile"
+    }
+}
+{% endhighlight %}</div>
+
+
+<h2 class="wp-block-heading">Deployment</h2>
+
+
+
+<p class="wp-block-paragraph">This is project and platform specific, so I won’t go into details, but let’s assume you’re zipping or packaging a build folder and sending somewhere. </p>
+
+
+
+<p class="wp-block-paragraph">Here we’d be able to use the branch environment variables to maybe choose a destination folder. We’re also able to reuse the build name environment variables. We created both of those in Prewarm. </p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
+stage ('Deploy') {
+    when {
+        expression { return params.BUILD == 'Deploy' }
+    }
+    steps {
+        // ... how to get a build to your platform of choice ...
+        slackSend color: 'good', message: ":ship: build ${env.BUILD_DISPLAY_NAME} DEPLOYED (<${env.BUILD_URL}|Open>)", channel: "project_builds"
+    }
+}
+{% endhighlight %}</div>
+
+
+<p class="wp-block-paragraph">We also post that the build has been deployed. More on notifications below.</p>
+
+
+
+<h2 class="wp-block-heading">Notifications and wrap-up</h2>
+
+
+
+<p class="wp-block-paragraph">The <code>post</code> section of the jenkinsfile contains blocks that will run after the main job, in different circumstances. We mostly use them to report progress to slack:</p>
+
+
+<div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
+post {
+    always {
+        nunit testResultsPattern: '*tests.xml'
+    }
+    success {
+        script {
+            if (params.BUILD == 'HealthCheck') {
+                slackSend color: 'good',
+                    message: ":green_heart: build ${env.BUILD_DISPLAY_NAME} SUCCEEDED (<${env.BUILD_URL}|Open>)",
+                    channel: "project_builds"
+            }
+        }
+    }
+    fixed {
+        slackSend color: 'good',
+            message: ":raised_hands: build ${env.BUILD_DISPLAY_NAME} FIXED (<${env.BUILD_URL}|Open>)",
+            channel: "project_builds"
+    }
+    aborted {
+        slackSend color: 'danger',
+            message: ":warning: build ${env.BUILD_DISPLAY_NAME} ABORTED. Was it intentional? (<${env.BUILD_URL}|Open>)",
+            channel: "project_builds"
+    }
+    failure {
+        slackSend color: 'danger',
+            message: ":red_circle: build ${env.BUILD_DISPLAY_NAME} FAILED (<${env.BUILD_URL}|Open>)",
+            channel: "project_builds"
+    }
+}                    
+{% endhighlight %}</div>
+
+
+<p class="wp-block-paragraph">The first step here is to <code>always</code> report the automated test results to Jenkins with the <a href="https://plugins.jenkins.io/nunit/"><code>nunit</code> plugin</a>. Unity&#8217;s test reports are in the nunit format, and this plugin converts it to the junit format that Jenkins expects. </p>
+
+
+
+<p class="wp-block-paragraph">We post all failures to the slack channel, and all fixed builds, but we don&#8217;t post all successes. With builds on every push that might make the build channel too noisy. We do however post when Health Checks succeed, since that&#8217;s good affirmation. </p>
+
+
+
+<p class="wp-block-paragraph">We use the <a href="https://plugins.jenkins.io/slack/">Slack Notification plugin</a>. The slack <code>color</code> attributes here doesn&#8217;t seem to work for us? So we use emojis to make it easy to scan what&#8217;s happening. Here&#8217;s an example from slack:</p>
+
+
+
+<figure><img loading="lazy" width="557" height="343" src="/images/blog/2020/12/jenkins-slack-build-notifications.png" alt="Slack messages from the jenkins app with emoji for a Health Check build that started, failed with 34 replies, then was fixed and succeeded" /></figure>
+
+
+
+<h2 class="wp-block-heading">Porting an existing job to pipelines</h2>
+
+
+
+<p class="wp-block-paragraph">Jenkins includes a <a href="https://www.jenkins.io/doc/book/pipeline/getting-started/#snippet-generator">snippet generator</a>, which allows you to make freestyle blocks and see the generated pipeline script, which is very handy for porting freestyle jobs:</p>
+
+
+
+<figure><img loading="lazy" width="1024" height="554" src="/images/blog/2020/12/jenkins-pipeline-snippet-generator.png" alt="The Jenkins Snippet Generator page with the slackSend step configured, and the generated slackSend pipeline script line below" /></figure>
+
+
+
+<h2 class="wp-block-heading">The full file</h2>
+
+
+<div class="wp-block-syntaxhighlighter-code ">{% highlight groovy %}
+UNITY_PATH = "C:\\Program Files\\Unity\\Hub\\Editor\\2019.4.5f1\\Editor\\Unity.exe"
+pipeline {
+    parameters {
+        choice(name: 'TYPE', choices: ['Debug', 'Release', 'Publisher'], description: 'Do you want cheats or speed?')
+        choice(name: 'BUILD', choices: ['Fast', 'Deploy', 'HealthCheck'], description: 'Fast builds run minimal tests and make a build. HealthCheck builds run more automated tests and are slower. Deploy builds are HealthChecks + a deploy.')
+        booleanParam(name: 'CLEAN', defaultValue: false, description: 'Tick to removed cached files - will take an eon')
+        booleanParam(name: 'SKIP_PLAYMODE_TESTS', defaultValue: false, description: 'In an emergency, to allow Deploy builds to work with a failing playmode test')
+    }
+    agent {
+        node {
+            label "My Project"
+            // force everyone to the space space, so we can share a library file.
+            customWorkspace 'workspace\\MyProject'
+        }
+    }
+    options {
+        timestamps()
+        // as a failsafe. our build tend around the 15min mark, so 45 would be excessive.
+        timeout(time: 45, unit: 'MINUTES')
+    }
+    // post stages only kick in once we definitely have a node
+    stages {
+        stage('Clean') {
+            when {
+                expression { return params.CLEAN }
+            }
+            steps {
+                bat "if exist Library (rmdir Library /s /q)"
+                bat "if exist Temp (rmdir Temp /s /q)"
+            }
+        }
+        stage('Prewarm') {
+            steps {
+                script {
+                    // not easy to get jenkins to tell us the current branch! none of the built-in envs seem to work?
+                    // let's just ask svn directly.
+                    def get_branch_script = 'svn info | select-string "Relative URL: \\^\\/(.*)" | %{\$_.Matches.Groups[1].Value}'
+                    env.R7_SVN_BRANCH = powershell(returnStdout: true, script:get_branch_script).trim()
+                }
+                buildName "${BUILD_NUMBER} - ${TYPE}@${env.R7_SVN_BRANCH}/${SVN_REVISION}"
+                script {
+                    if (params.BUILD == 'Deploy') {
+                        buildName "${env.BUILD_DISPLAY_NAME} ^Deploy"
+                    }
+                    if (params.BUILD == 'HealthCheck') {
+                        buildName "Health Check of ${TYPE}@${env.R7_SVN_BRANCH}/${SVN_REVISION}"
+                    }
+                    if (params.BUILD == 'HealthCheck' || params.BUILD == 'Deploy') {
+                        // let's warn that a deploy build is in progress
+                        slackSend color: 'good',
+                            message: ":hourglass: build ${env.BUILD_DISPLAY_NAME} STARTED (<${env.BUILD_URL}|Open>)",
+                            channel: "project_builds"
+                    }
+                }
+                // clean tests
+                bat "if exist *tests.xml (del *tests.xml)"
+                // need an initial open/close to clean out the serialisation. without this you can get things validating on old code!!
+                // do it twice, to make it more tolerant of bad libraries when switching branches
+                retry(count: 2) {
+                    bat "\"${UNITY_PATH}\" -nographics -buildTarget Win64 -quit -batchmode -projectPath . -executeMethod MyBuildFunction -MyBuildType \"${params.TYPE}\" -MyTestOnly -logFile"
+                }
+            }
+        }
+        stage ('Editmode Tests') {
+            steps {
+                bat "\"${UNITY_PATH}\" -nographics -batchmode -projectPath . -runTests -testResults editmodetests.xml -testPlatform editmode -logFile"
+            }
+        }
+        stage ('Playmode Tests') {
+            when {
+                expression {
+                    return (params.BUILD == 'Deploy' || params.BUILD == 'HealthCheck') && !params.SKIP_PLAYMODE_TESTS
+                }
+            }
+            steps {
+                // no -nographics on playmode tests. they don't log right now? which is weird cuz the editmode tests do with almost the same setup.
+                bat "\"${UNITY_PATH}\" -batchmode -projectPath . -runTests -testResults playmodetests.xml -testPlatform playmode -testCategory \"BuildServer\" -logFile"
+            }
+        }
+        stage ('Build') {
+            steps {
+                bat "\"${UNITY_PATH}\" -nographics -buildTarget Win64 -quit -batchmode -projectPath . -executeMethod MyBuildFunction  -MyBuildType \"${params.TYPE}\" -logFile"
+            }
+        }
+        stage ('Deploy') {
+            when {
+                expression { return params.BUILD == 'Deploy' }
+            }
+            steps {
+                // ... how to get a build to your platform of choice ...
+                slackSend color: 'good', message: ":ship: build ${env.BUILD_DISPLAY_NAME} DEPLOYED (<${env.BUILD_URL}|Open>)", channel: "project_builds"
+            }
+        }        
+    }
+    post {
+        always {
+            nunit testResultsPattern: '*tests.xml'
+        }
+        success {
+            script {
+                if (params.BUILD == 'HealthCheck') {
+                    slackSend color: 'good',
+                        message: ":green_heart: build ${env.BUILD_DISPLAY_NAME} SUCCEEDED (<${env.BUILD_URL}|Open>)",
+                        channel: "project_builds"
+                }
+            }
+        }
+        fixed {
+            slackSend color: 'good',
+                message: ":raised_hands: build ${env.BUILD_DISPLAY_NAME} FIXED (<${env.BUILD_URL}|Open>)",
+                channel: "project_builds"
+        }
+        aborted {
+            slackSend color: 'danger',
+                message: ":warning: build ${env.BUILD_DISPLAY_NAME} ABORTED. Was it intentional? (<${env.BUILD_URL}|Open>)",
+                channel: "project_builds"
+        }
+        failure {
+            slackSend color: 'danger',
+                message: ":red_circle: build ${env.BUILD_DISPLAY_NAME} FAILED (<${env.BUILD_URL}|Open>)",
+                channel: "project_builds"
+        }
+    }                    
+}
+{% endhighlight %}</div>
+
+
+<p class="wp-block-paragraph">Congrats to reading to the end! Your prize is a nice fish: 🐟</p>
