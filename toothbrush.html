@@ -86,6 +86,35 @@ permalink: /toothbrush/
       --bg: #ffb300;
     }
 
+    /* Special-occasion fortunes */
+    body.occasion-halloween {
+      --bg: #0b0f24;
+    }
+
+    body.occasion-christmas {
+      --bg: #6a0a0e;
+    }
+
+    body.occasion-valentines {
+      --bg: #8b0a2a;
+    }
+
+    body.occasion-bonfire {
+      --bg: #2b1030;
+    }
+
+    body.occasion-newyear {
+      --bg: #b8860b;
+    }
+
+    body.occasion-aprilfools {
+      --bg: #00838f;
+    }
+
+    body.occasion-birthday {
+      --bg: #6a00a0;
+    }
+
     .app {
       width: 100%;
       max-width: 640px;
@@ -387,14 +416,16 @@ permalink: /toothbrush/
     }
 
     @keyframes fortune-pop {
+
+      /* --rot tilts the emoji on April Fools' (set inline in JS). */
       from {
         opacity: 0;
-        transform: scale(var(--pop-scale));
+        transform: rotate(var(--rot, 0deg)) scale(var(--pop-scale));
       }
 
       to {
         opacity: 1;
-        transform: scale(1);
+        transform: rotate(var(--rot, 0deg)) scale(1);
       }
     }
 
@@ -413,10 +444,15 @@ permalink: /toothbrush/
     .confetti {
       position: fixed;
       top: 0;
-      font-size: 28px;
+      font-size: 36px;
       animation: fall linear forwards;
       pointer-events: none;
       will-change: transform;
+    }
+
+    /* Themed confetti (special occasions, December snow) is much bigger. */
+    .confetti.special {
+      font-size: 64px;
     }
 
     @keyframes fall {
@@ -489,6 +525,9 @@ permalink: /toothbrush/
       //   night   — force the past-noon "Tonight, dream of:" fortune label
       //   two     — force a two-emoji fortune (verb + subject)
       //   three   — force a three-emoji fortune (subject + verb + subject)
+      //   halloween / bonfire / christmas / newyear / valentines / birthday /
+      //   aprilfools — force that special-occasion fortune
+      //   december — force the December snow confetti
       // A bare ?debug (no value) is treated as "fast" for backwards compat.
       var debugParam = new URLSearchParams(window.location.search).get("debug");
       var DEBUG = {};
@@ -553,6 +592,76 @@ permalink: /toothbrush/
         "🍴", "🪥", "🏆", "⚡", "👀", "🎨", "🤼", "🥊",
         "🍳"
       ];
+
+      // Special occasions replace the usual fortune with three emoji from a
+      // themed list (no verb) on an occasion-<name> background.
+      //   dates    — "month-day" strings the occasion falls on
+      //   emoji    — the pool the three are drawn from
+      //   always   — (optional) guaranteed to be one of the three
+      //   confetti — (optional) celebration confetti pieces
+      //   night    — label used in place of "Tonight, dream of:"
+      //   rotate   — (optional) tilt each emoji at a random angle
+      var OCCASIONS = {
+        halloween: {
+          dates: ["10-31"],
+          emoji: ["🎃", "👻", "🦇", "🕷️", "🕸️", "💀", "🧟", "🧛", "🧙", "🪦", "🐈‍⬛", "🌕", "🍬"],
+          confetti: ["🕷️"],
+          night: "Don't have nightmares:"
+        },
+        bonfire: {
+          dates: ["11-5"],
+          emoji: ["🎆", "🎇", "🔥", "🧨", "✨", "🌭", "🥔", "🧤", "🧣", "🍭", "🌙"],
+          night: "Dream in fireworks:"
+        },
+        christmas: {
+          dates: ["12-24", "12-25", "12-26"],
+          always: "🎅",
+          emoji: ["🎄", "🤶", "⛄", "❄️", "🦌", "🎁", "🔔", "⭐", "🍪", "🧦", "🕯️", "🛷"],
+          night: "Christmas dreams of:"
+        },
+        newyear: {
+          dates: ["1-1"],
+          emoji: ["🎆", "🎇", "🥳", "🎉", "🎊", "🕛", "✨", "⭐", "🌟", "🎈"],
+          night: "First dreams of the year:"
+        },
+        valentines: {
+          dates: ["2-14"],
+          emoji: ["❤️", "💖", "💕", "💘", "💝", "💗", "🌹", "💌", "🧸", "🍫", "💐", "🥰", "😍", "😘"],
+          confetti: ["❤️", "💖", "💕", "💗"],
+          night: "Dream of all you love:"
+        },
+        birthday: {
+          dates: ["2-6", "2-17", "10-20"],
+          emoji: ["🎁", "🎂", "🧁", "🎈", "🎉", "🎊", "🥳", "🍰"],
+          confetti: ["🎁"],
+          night: "Birthday dreams of:"
+        },
+        aprilfools: {
+          dates: ["4-1"],
+          emoji: ["🤪", "🃏", "🙃", "🤡", "🐸", "🎭", "😜", "🤭", "🥸", "🐔", "🍌", "💩", "🦆"],
+          night: "APRIL FOOLS!",
+          rotate: true
+        }
+      };
+
+      // Which occasion (if any) today is, by local date. ?debug=<name> forces
+      // one.
+      function currentOccasion() {
+        for (var name in OCCASIONS) {
+          if (DEBUG[name]) return name;
+        }
+        var now = new Date();
+        var today = now.getMonth() + 1 + "-" + now.getDate();
+        for (var name in OCCASIONS) {
+          if (OCCASIONS[name].dates.indexOf(today) !== -1) return name;
+        }
+        return null;
+      }
+
+      // Snow confetti all through December (or ?debug=december).
+      function isDecember() {
+        return !!DEBUG.december || new Date().getMonth() === 11;
+      }
 
       var body = document.body;
       var emojiEl = document.getElementById("emoji");
@@ -903,7 +1012,22 @@ permalink: /toothbrush/
       // Three→ subject + verb + subject, the two subjects always different
       //        (🐶⚔️🐱). Returns one emoji per array entry, so each can be
       //        rendered as its own element and faded in separately.
-      function pickFortune() {
+      // On a special occasion: three distinct themed emoji, with the
+      // occasion's `always` emoji (if any) in a random slot.
+      function pickOccasionFortune(occasion) {
+        var pool = occasion.emoji.slice();
+        var parts = [];
+        while (parts.length < (occasion.always ? 2 : 3)) {
+          parts.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+        }
+        if (occasion.always) {
+          parts.splice(Math.floor(Math.random() * 3), 0, occasion.always);
+        }
+        return parts;
+      }
+
+      function pickFortune(occasion) {
+        if (occasion) return pickOccasionFortune(OCCASIONS[occasion]);
         var count = fortuneCount();
         if (count === 1) return [pickFrom(FORTUNE_EMOJI)];
         if (count === 2) return [pickFrom(VERB_EMOJI), pickFrom(FORTUNE_EMOJI)];
@@ -924,14 +1048,19 @@ permalink: /toothbrush/
         hide(headlineEl);
         hide(mouthEl);
 
-        // Past noon (local time) the fortune becomes a bedtime dream.
+        var occasion = currentOccasion();
+        if (occasion) body.className = "occasion-" + occasion;
+
+        // Past noon (local time) the fortune becomes a bedtime dream, with
+        // its own wording on special occasions.
         fortuneLabelEl.textContent = isNight()
-          ? "Tonight, dream of:"
+          ? (occasion ? OCCASIONS[occasion].night : "Tonight, dream of:")
           : "Your fortune is:";
         show(fortuneLabelEl);
         // Build the row now — each emoji is opacity:0 until it pops in, so the
         // layout is settled and centred before anything appears.
-        var parts = pickFortune();
+        var parts = pickFortune(occasion);
+        var rotate = occasion && OCCASIONS[occasion].rotate;
         fortuneEmojiEl.classList.remove("reveal", "count-2", "count-3");
         if (parts.length > 1) {
           fortuneEmojiEl.classList.add("count-" + parts.length);
@@ -944,6 +1073,10 @@ permalink: /toothbrush/
           part.className = "fortune-part";
           part.textContent = emoji;
           part.style.animationDelay = i * FORTUNE_STAGGER_MS + "ms";
+          if (rotate) {
+            // Anywhere from 30° to 330°, so it's never nearly upright.
+            part.style.setProperty("--rot", 30 + Math.random() * 300 + "deg");
+          }
           fortuneEmojiEl.appendChild(part);
         });
         show(fortuneSlotEl);
@@ -969,10 +1102,19 @@ permalink: /toothbrush/
       }
 
       function launchConfetti() {
+        var occasion = currentOccasion();
         var pieces = ["🎉", "⭐", "✨", "🦷", "💙"];
+        var special = true;
+        if (occasion && OCCASIONS[occasion].confetti) {
+          pieces = OCCASIONS[occasion].confetti;
+        } else if (isDecember()) {
+          pieces = ["❄️"];
+        } else {
+          special = !!occasion;
+        }
         for (var i = 0; i < 24; i++) {
           var c = document.createElement("div");
-          c.className = "confetti";
+          c.className = special ? "confetti special" : "confetti";
           c.textContent = pieces[i % pieces.length];
           c.style.left = ((i * 37) % 100) + "vw";
           c.style.animationDuration = 2 + ((i % 5) * 0.4) + "s";
