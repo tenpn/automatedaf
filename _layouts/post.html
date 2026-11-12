@@ -18,7 +18,7 @@ layout: default
             {{ content }}
           </div>
           <script>
-            document.querySelectorAll(".post-content figure img[alt]").forEach(function (img) {
+            document.querySelectorAll(".post-content img[alt]").forEach(function (img) {
               if (img.alt.trim() && !img.title) img.title = img.alt;
             });
           </script>
