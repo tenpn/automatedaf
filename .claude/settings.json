@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(curl *mailerlite.com*)",
+      "Bash(wget *mailerlite.com*)",
+      "Bash(http *mailerlite.com*)",
+      "Bash(security *mailerlite-api*)",
+      "WebFetch(domain:connect.mailerlite.com)",
+      "WebFetch(domain:api.mailerlite.com)",
+      "mcp__claude_ai_MailerLite"
+    ],
+    "ask": [
+      "Bash(python3 .claude/skills/post-to-newsletter/scripts/post_to_newsletter.py *--create*)",
+      "Bash(python3 .claude/skills/post-to-newsletter/scripts/post_to_newsletter.py *--force*)",
+      "Bash(python3 -c *mailerlite*)",
+      "Bash(python3 - *mailerlite*)",
+      "Edit(.claude/skills/newsletter-to-post/scripts/mailerlite.py)"
+    ],
+    "allow": [
+      "Bash(python3 .claude/skills/newsletter-to-post/scripts/list_newsletters.py)",
+      "Bash(python3 .claude/skills/newsletter-to-post/scripts/newsletter_to_post.py *)",
+      "Bash(python3 .claude/skills/post-to-newsletter/scripts/post_to_newsletter.py *)"
+    ]
+  }
+}
