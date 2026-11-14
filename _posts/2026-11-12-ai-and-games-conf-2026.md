@@ -4,6 +4,7 @@ title: "Takeaways From The AI And Games Conf 2026"
 image: /images/blog/2026/ai-and-games-conf-2026.jpeg
 categories: [Test Automation]
 date: 2026-11-12 00:00:00 +0000
+newsletter_id: 204130933708686515
 ---
 
 ![Andrew in front of the AI And Games Classroom](/images/blog/2026/ai-and-games-conf-2026.jpeg)

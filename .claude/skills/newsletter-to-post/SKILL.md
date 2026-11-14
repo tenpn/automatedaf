@@ -9,8 +9,8 @@ Converts sent MailerLite campaigns into posts using the `post` layout. The rules
 
 ## API safety (read first)
 
-- **The MailerLite API key is unscoped.** It can change subscribers and campaigns, so all API access goes through `scripts/mailerlite.py`. That client only sends GET requests, and only to `/api/campaigns` and `/api/campaigns/<id>`. Never add other methods or paths without the user's explicit agreement, and never call the API any other way.
-- **The key lives in the macOS Keychain** item `mailerlite-api`. Never print it, log it or write it anywhere, and never run `security find-generic-password … -w` except inside `mailerlite.py`. To replace the key, follow `new-key-installation.md`.
+- **The MailerLite API key is unscoped.** It can change subscribers and campaigns, so all API access goes through `scripts/mailerlite.py`. That client only sends GET requests to `/api/campaigns` and `/api/campaigns/<id>`, plus one write the user agreed to: `POST /api/campaigns`, used by the post-to-newsletter skill's `post_to_newsletter.py` to create a *draft* campaign. It refuses to schedule or send. Never add other methods or paths without the user's explicit agreement, and never call the API any other way.
+- **The key lives in the macOS Keychain** item `mailerlite-api`. Never print it, log it or write it anywhere, and never run `security find-generic-password … -w` except inside `mailerlite.py`.
 - **The API doesn't hold the content.** Campaign `content` is empty and `plain_text` is a placeholder. The newsletter's content comes from each email's public web preview (`preview_url`), which is fetched as an ordinary web page without the key.
 
 ## Rules
