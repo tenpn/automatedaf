@@ -4,11 +4,12 @@ title: "More is not always better: The UX of test failures"
 categories: [Test Automation]
 image: /images/blog/2026/chernobyl-control-room.jpg
 date: 2026-11-23 00:00:00 +0000
+newsletter_id: 204925014728770747
 ---
 
 ![The control room from HBO's Chernobyl. An overwhelming amount of lights and gauges and dials.](/images/blog/2026/chernobyl-control-room.jpg)
 
-An automated test fails. Now is the most important step: how fast and smoothly can you diagnose what's wrong?
+An automated test fails. The next step is the most important: how fast and how smoothly can you diagnose what's wrong?
 
 I've seen enough studios now fighting uphill to get automation created and online, only to take no care about the user experience of a test failure. A Slack post mentions "test failures" but not which ones. A log-in to Jenkins later and you're now filtering lists and expanding trees to get to a test failure name - which is probably not super helpful. You're then opening logs and ctrl-F'ing for error statements, or, worse, scrubbing videos.
 
@@ -22,7 +23,7 @@ The biggest crime I see with test failures is a test that's doing too much. A fa
 
 Much better to break down big long tests into tests with just one or two asserts in them. In long [smoke tests]({% post_url 2025-09-03-theres-no-fire-without-smoke-tests %}), this sometimes requires some jiggery-pokery with smaller fixtures, allowing more fine-grained setup/teardown, but don't forget OneTimeSetUp and OneTimeTearDown are valuable tools too.
 
-For [smoke tests]({% post_url 2025-09-03-theres-no-fire-without-smoke-tests %}), this is the one time it's acceptable to have ordering and dependency between your tests. It's also a good time to update your naming convention so your test names are as informative as possible. I like Given_When_Then for this, where Given is the context, When is the action and Then is the assert.
+For smoke tests, this is the one time it's acceptable to have ordering and dependency between your tests. It's also a good time to update your naming convention so your test names are as informative as possible. I like Given_When_Then for this, where Given is the context, When is the action and Then is the assert.
 
 The end result should be seeing a GivenObjective_WhenCompleted_ThenGemsSpawn test fail. That tells you way more already about what went wrong.
 
